@@ -1,0 +1,22 @@
+# Ahren & Jackson, 1979, three difficulties,
+# always multiplications
+
+[easy]
+op1 = [12, 13, 14]
+op2 = [6, 7, 8, 9]
+operation = "*"
+
+[medium_a]
+op1 = [11, 12, 13, 14]
+op2 = [11, 12, 13, 14]
+operation = "*"
+
+[medium_b]
+op1 = [16, 17, 18, 19]
+op2 = [6, 7, 8, 9]
+operation = "*"
+
+[high]
+op1 = [16, 17, 18, 19]
+op2 = [11, 12, 13, 14]
+operation = "*"
