@@ -6,13 +6,14 @@ from fractions import Fraction
 from hashlib import md5
 from typing import Any, Dict, Optional
 
-from ._number import Num, NumType, PyNum
+from ._number import Num, NumType, TypeNumerical
 
 SYMBOL_NAMES = {"=": "equal",
                 "+": "plus",
                 "*": "multiply",
                 "/": "divide",
                 "-": "minus"}
+
 
 class MathProblem(object):
 
@@ -41,7 +42,7 @@ class MathProblem(object):
         return self._op1
 
     @operant1.setter
-    def operant1(self, val:NumType):
+    def operant1(self, val: NumType):
         self._op1 = Num(val)
 
     @property
@@ -49,7 +50,7 @@ class MathProblem(object):
         return self._op2
 
     @operant2.setter
-    def operant2(self, val:NumType):
+    def operant2(self, val: NumType):
         self._op2 = Num(val)
 
     @property
@@ -57,7 +58,7 @@ class MathProblem(object):
         return self._result
 
     @result.setter
-    def result(self, val:Optional[NumType]):
+    def result(self, val: Optional[NumType]):
         if val is None:
             self._result = None
         else:
@@ -68,15 +69,15 @@ class MathProblem(object):
         return self._operation
 
     @operation.setter
-    def operation(self, val:str):
+    def operation(self, val: str):
         if val not in MathProblem.OPERATIONS:
             raise ValueError(f"Unknown operation: '{val}'")
         if val == MathProblem.LABEL_MULTI:
-            self._operation= "*"
+            self._operation = "*"
         elif val == MathProblem.LABEL_DIVIDE:
-            self._operation= "/"
+            self._operation = "/"
         else:
-            self._operation= val
+            self._operation = val
 
     def operation_label(self):
         if self._operation == "*":
@@ -92,7 +93,9 @@ class MathProblem(object):
         else:
             self.properties = props.copy()
 
-    def as_dict(self, incl_hash=False) -> dict:
+    def as_dict(self, incl_hash=False,
+                problem_size=False,
+                n_carry=False) -> dict:
 
         rtn = {'op1': self._op1.label(),
                'operation': self.operation,
@@ -103,6 +106,15 @@ class MathProblem(object):
             rtn['result'] = self._result.label()
             rtn['correct'] = str(int(self.is_correct()))
             rtn['dev'] = str(self.deviation())
+
+        if problem_size:
+            rtn['prob_size'] = str(self.problem_size())
+        if n_carry:
+            nc = self.n_carry()
+            if nc is None:
+                nc = ""
+            rtn['n_carry'] = str(nc)
+
         rtn['label'] = self.label()
         if isinstance(self.properties, dict):
             rtn.update(self.properties)
@@ -110,7 +122,7 @@ class MathProblem(object):
             rtn['hash'] = self.hash()
         return rtn
 
-    def calc(self) -> PyNum:
+    def calc(self) -> TypeNumerical:
         # returns correct result
         o1 = self._op1.py_number
         o2 = self._op2.py_number
@@ -127,7 +139,8 @@ class MathProblem(object):
             else:
                 return Fraction(o1, o2)
         else:
-            raise RuntimeError(f"Unknown operation: '{self.operation}'") # should never happen
+            # should never happen
+            raise RuntimeError(f"Unknown operation: '{self.operation}'")
 
     def deviation(self) -> Num:
         """deviation from correct"""
@@ -164,6 +177,46 @@ class MathProblem(object):
             return False
         return self.calc() == self._result.py_number
 
+    def n_carry(self) -> Optional[int]:
+        """number of carry operations for addition and subtraction
+        else None"""
+
+        if self.operation == "+":
+            subtraction = False
+        elif self.operation == "-":
+            subtraction = True
+        else:
+            return None
+
+        str_op1 = str(self.operant1)
+        str_op2 = str(self.operant2)
+        # Get the length of the longer number
+        max_length = max(len(str_op1), len(str_op2))
+        # Add leading zeros to make the numbers have the same length
+        str_op1 = str_op1.zfill(max_length)
+        str_op2 = str_op2.zfill(max_length)
+
+        current_carry = 0
+        ncarry = 0
+        for i in range(max_length - 1, -1, -1):     # Iterate over digits from right to left
+            if subtraction:
+                res = int(str_op1[i]) - int(str_op2[i])
+                res -= current_carry
+            else:
+                res = int(str_op1[i]) + int(str_op2[i])
+                res += current_carry
+
+            if (subtraction and res < 0) or (not subtraction and res >= 10):
+                ncarry += 1
+                current_carry = 1
+            else:
+                current_carry = 0
+
+        return ncarry
+
+    def problem_size(self) -> TypeNumerical:
+        return (self.operant1.py_number + self.operant1.py_number) / 2.0
+
     @staticmethod
     def parse(txt: str, properties: Optional[Dict[str, Any]] = None) -> MathProblem:
         """fractions have to presented like in labels: frac5_6
@@ -190,6 +243,15 @@ class MathProblem(object):
                     op1, operation, op2, result, properties)  # type: ignore
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
+
+    def is_tie(self):
+        return self.operant1 == self.operant2
+
+    def has_decade_solution(self):
+        return self.calc() % 10 == 0
+
+    def has_same_parities(self):
+        return self.operant1.py_number % 2 == self.operant2.py_number % 2
 
 
 def _split_after_digit(txt: str, letter: str):

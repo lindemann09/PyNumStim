@@ -4,14 +4,14 @@ import re
 from fractions import Fraction
 from typing import Optional, Tuple
 
-PyNum = int | float | Fraction
+TypeNumerical = int | float | Fraction
 
 
 class Num(object):
     # Rational number, that will not be normalized as Fractions
 
     def __init__(self,
-                 numerator: PyNum | Num | str,  # fixme str to parse
+                 numerator: TypeNumerical | Num | str,  # fixme str to parse
                  denominator: Optional[int | float] = None) -> None:
 
         if isinstance(numerator, (Fraction, Num, str)):
@@ -51,7 +51,7 @@ class Num(object):
     __rmul__ = __mul__
 
     @property
-    def py_number(self) -> PyNum:
+    def py_number(self) -> TypeNumerical:
         """returns Python Rational (int, Fraction) or float  for calculations"""
         if isinstance(self.numerator, Num):
             n = self.numerator.py_number
@@ -113,4 +113,4 @@ def _parse(txt: str) -> Tuple[int | float, int | float]:
     raise ValueError(f"Can't convert '{txt}' to Num.")
 
 
-NumType = PyNum | Num | str
+NumType = TypeNumerical | Num | str

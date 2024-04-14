@@ -16,8 +16,12 @@ class Datasets:
         return rtn
 
     @classmethod
-    def Ahren_Jackson(cls) -> MathProblemList:
-        return cls.read_dataset("Ahren_Jackson.toml")
+    def Ahren_Jackson_79(cls) -> MathProblemList:
+        return cls.read_dataset("Ahren_Jackson_79.toml")
+
+    @classmethod
+    def Lindemann_Tira_10(cls) -> MathProblemList:
+        return cls.read_dataset("Lindemann_Tira_10.toml")
 
     @staticmethod
     def problem_space(operation: str,
@@ -43,7 +47,6 @@ class Datasets:
                     for dev in inc_dev:
                         p = MathProblem(op1, operation, op2)
                         correct = p.calc()
-                        assert isinstance(correct, int)
                         result = correct + dev
                         if not decade_results and (result % 10 == 0 or correct % 10 == 0):
                             continue

@@ -73,16 +73,25 @@ class MathProblemList(object):
     def shuffel(self):
         shuffle(self.list)
 
-    def data_frame(self, first_id: Optional[int] = None) -> pd.DataFrame:
+    def data_frame(self,
+                   first_id: Optional[int] = None,
+                   problem_size=False,
+                   n_carry=False) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
-        rtn = pd.DataFrame([a.as_dict() for a in self.list])
+        dicts = [a.as_dict(problem_size=problem_size, n_carry=n_carry)
+                 for a in self.list]
+        rtn = pd.DataFrame(dicts)
         if first_id is not None:
             rtn['problem_id'] = range(first_id, first_id+len(rtn))
         return rtn
 
-    def to_csv(self, filename: Union[Path, str], first_id: Optional[int] = None) -> pd.DataFrame:
+    def to_csv(self, filename: Union[Path, str],
+               first_id: Optional[int] = None,
+               problem_size=False,
+               n_carry=False) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
-        df = self.data_frame(first_id=first_id)
+        df = self.data_frame(
+            first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
         return df
 
@@ -107,6 +116,13 @@ class MathProblemList(object):
             problems = [[1, "*", 4, 45]
                         ["1/6723", "-", 4, 45]]
 
+
+        method c:
+
+            [category]
+            problems = [ "1 + 5 = 8",
+                        "1/2 + 1/4 = 9"]
+
         Args:
             problem_dict: _description_
             sections: _description_. Defaults to None.
@@ -121,7 +137,11 @@ class MathProblemList(object):
             d = problem_dict[s]
             if "problems" in d:
                 for x in d["problems"]:
-                    p = MathProblem(x[0], x[1], x[2], properties=prop)
+                    if isinstance(x, list):
+                        p = MathProblem(x[0], x[1], x[2])
+                    else:
+                        p = MathProblem.parse(x)
+                    p.update_properties(prop)
                     self.append(p)
             if 'op1' in d and 'op2' in d and 'operation' in d:
                 for op1 in d['op1']:
