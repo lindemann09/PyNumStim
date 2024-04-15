@@ -6,6 +6,7 @@ from sympy import preview
 from ._problem import MathProblem, LATEX_SYMBOL_NAMES
 from ._mplist import MathProblemList
 
+
 def create_images(
         source: Union[str, MathProblem, MathProblemList],
         path: Optional[Union[Path, str]] = None,
@@ -39,13 +40,10 @@ def _from_tex(
         fg: str = "White",
         bg: str = "Transparent"):
     """latex to PNG"""
-    return preview(
-        tex_str,
-        dvioptions=["-D", str(resolution), "-fg", fg, "-bg", bg],
-        viewer="file",
-        filename=filename,
-        euler=False,
-    )
+    return preview(tex_str,
+                   dvioptions=["-D", str(resolution), "-fg", fg, "-bg", bg],
+                   viewer="file", filename=filename,
+                   euler=False)
 
 
 def _from_problem(
@@ -111,13 +109,10 @@ def _from_problem_list(
 
         for tex, label in stim:
             print("png: " + label)
-            _from_tex(
-                f"$${tex}$$",
-                filename=os.path.join(folder, "n" + f"{label}.png"),
-                resolution=resolution,
-                fg=fg,
-                bg=bg,
-            )
+            _from_tex(f"$${tex}$$",
+                      filename=os.path.join(folder, "n" + f"{label}.png"),
+                      resolution=resolution,
+                      fg=fg, bg=bg)
 
 
 def _create_latex_symbols(folder: Union[Path, str],
@@ -128,6 +123,4 @@ def _create_latex_symbols(folder: Union[Path, str],
     for symbol, name in LATEX_SYMBOL_NAMES.items():
         _from_tex(f"$${symbol}$$",
                   filename=os.path.join(folder, f"{name}.png"),
-                  resolution=resolution,
-                  fg=fg,
-                  bg=bg)
+                  resolution=resolution, fg=fg, bg=bg)
