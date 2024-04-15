@@ -291,7 +291,7 @@ class MathProblem(object):
 
 def _split_after_digit(txt: str, letter: str):
     # splits txt at letter only if a digit proceeds the letter
-    if letter in ["+", "*", "\\"]:
+    if letter in ["+", "*", "\\"]: # escaping required
         letter = f"\\{letter}"
     a = re.search(f"\\d\\s*{letter}", txt)
     if a is not None:
@@ -302,7 +302,7 @@ def _split_after_digit(txt: str, letter: str):
 
 def _size(num: Num) -> TPyNum:
     """helper for calculation problem size with fractions.
-    In this case, return mean of numerator and denomintor"""
+    In this case, return mean of numerator and denominator"""
     if num.is_fraction():
         return (num.numerator + num.denominator) / 2.0
     else:
