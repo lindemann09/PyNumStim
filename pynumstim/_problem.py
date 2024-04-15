@@ -6,13 +6,14 @@ from fractions import Fraction
 from hashlib import md5
 from typing import Any, Dict, Optional
 
-from ._number import Num, NumType, TypeNumerical
+from ._number import Num, TNum, TPyNum
 
 SYMBOL_NAMES = {"=": "equal",
                 "+": "plus",
                 "*": "multiply",
                 "/": "divide",
                 "-": "minus"}
+TProperties = Dict[str, Any]
 
 
 class MathProblem(object):
@@ -22,11 +23,11 @@ class MathProblem(object):
     OPERATIONS = ["+", "-", "*", "/", LABEL_MULTI, LABEL_DIVIDE]
 
     def __init__(self,
-                 operant1: NumType,
+                 operant1: TNum,
                  operation: str,
-                 operant2: NumType,
-                 result: Optional[NumType] = None,
-                 properties: Optional[Dict[str, Any]] = None) -> None:
+                 operant2: TNum,
+                 result: Optional[TNum] = None,
+                 properties: Optional[TProperties] = None) -> None:
         """properties: dict of properties.
                         Keys repesent the property name and must be text strings
         """
@@ -42,7 +43,7 @@ class MathProblem(object):
         return self._op1
 
     @operant1.setter
-    def operant1(self, val: NumType):
+    def operant1(self, val: TNum):
         self._op1 = Num(val)
 
     @property
@@ -50,7 +51,7 @@ class MathProblem(object):
         return self._op2
 
     @operant2.setter
-    def operant2(self, val: NumType):
+    def operant2(self, val: TNum):
         self._op2 = Num(val)
 
     @property
@@ -58,7 +59,7 @@ class MathProblem(object):
         return self._result
 
     @result.setter
-    def result(self, val: Optional[NumType]):
+    def result(self, val: Optional[TNum]):
         if val is None:
             self._result = None
         else:
@@ -93,27 +94,43 @@ class MathProblem(object):
         else:
             self.properties = props.copy()
 
-    def as_dict(self, incl_hash=False,
-                problem_size=False,
-                n_carry=False) -> dict:
+    def has_properites(self, props: TProperties) -> bool:
+        """returns if problem is the properties defined in props"""
+        if self.properties is None:
+            return False
+        for key, value in props.items():
+            if key not in self.properties or self.properties[key] != value:
+                return False
+        return True
 
+    def _as_dict(self) -> Dict[str, Any]:
+        """minimal dict representation of the problem without properties"""
         rtn = {'op1': self._op1.label(),
                'operation': self.operation,
                'op2': self._op2.label()}
+
         if self._result is None:
             rtn['result'] = ""
         else:
             rtn['result'] = self._result.label()
-            rtn['correct'] = str(int(self.is_correct()))
-            rtn['dev'] = str(self.deviation())
+        return rtn
+
+    def problem_dict(self,
+                     incl_hash=False,
+                     problem_size=False,
+                     n_carry=False) -> Dict[str, str | int | float]:
+
+        rtn = self._as_dict()
+        if self._result is not None:
+            rtn['correct'] = int(self.is_correct())
+            rtn['dev'] = self.deviation()
 
         if problem_size:
-            rtn['prob_size'] = str(self.problem_size())
+            rtn['prob_size'] = self.problem_size()
         if n_carry:
             nc = self.n_carry()
-            if nc is None:
-                nc = ""
-            rtn['n_carry'] = str(nc)
+            if nc is not None:
+                rtn['n_carry'] = nc
 
         rtn['label'] = self.label()
         if isinstance(self.properties, dict):
@@ -122,7 +139,7 @@ class MathProblem(object):
             rtn['hash'] = self.hash()
         return rtn
 
-    def calc(self) -> TypeNumerical:
+    def calc(self) -> TPyNum:
         # returns correct result
         o1 = self._op1.py_number
         o2 = self._op2.py_number
@@ -142,12 +159,12 @@ class MathProblem(object):
             # should never happen
             raise RuntimeError(f"Unknown operation: '{self.operation}'")
 
-    def deviation(self) -> Num:
+    def deviation(self) -> Optional[float]:
         """deviation from correct"""
         if self._result is None:
-            return Num(0)
+            return None
         else:
-            return self._result - self.calc()
+            return float(self._result) - self.calc()
 
     def tex(self) -> str:
         o1 = self._op1.tex()
@@ -163,7 +180,16 @@ class MathProblem(object):
         """
         o1 = self._op1.label()
         o2 = self._op2.label()
-        rtn = f"{o1} {self.operation_label()} {o2}"
+        rtn = f"{o1}{self.operation_label()}{o2}"
+        if self._result is not None:
+            rtn += f"={self._result.label()}"
+        return rtn
+
+    def __str__(self) -> str:
+        """text representation"""
+        o1 = self._op1.label()
+        o2 = self._op2.label()
+        rtn = f"{o1} {self.operation} {o2}"
         if self._result is not None:
             rtn += f" = {self._result.label()}"
         return rtn
@@ -175,12 +201,16 @@ class MathProblem(object):
     def is_correct(self):
         if self._result is None:
             return False
+        print(self.calc())
+        print(type(self._op1))
         return self.calc() == self._result.py_number
 
     def n_carry(self) -> Optional[int]:
         """number of carry operations for addition and subtraction
         else None"""
 
+        if self.operant1.is_fraction() or self.operant2.is_fraction():
+            return None
         if self.operation == "+":
             subtraction = False
         elif self.operation == "-":
@@ -198,7 +228,8 @@ class MathProblem(object):
 
         current_carry = 0
         ncarry = 0
-        for i in range(max_length - 1, -1, -1):     # Iterate over digits from right to left
+        # Iterate over digits from right to left
+        for i in range(max_length - 1, -1, -1):
             if subtraction:
                 res = int(str_op1[i]) - int(str_op2[i])
                 res -= current_carry
@@ -214,11 +245,11 @@ class MathProblem(object):
 
         return ncarry
 
-    def problem_size(self) -> TypeNumerical:
+    def problem_size(self) -> float:
         return (self.operant1.py_number + self.operant1.py_number) / 2.0
 
     @staticmethod
-    def parse(txt: str, properties: Optional[Dict[str, Any]] = None) -> MathProblem:
+    def parse(txt: str, properties: Optional[TProperties] = None) -> MathProblem:
         """fractions have to presented like in labels: frac5_6
         can also convert labels to problems
         """
@@ -244,13 +275,13 @@ class MathProblem(object):
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
-    def is_tie(self):
+    def is_tie(self) -> bool:
         return self.operant1 == self.operant2
 
-    def has_decade_solution(self):
+    def has_decade_solution(self) -> bool:
         return self.calc() % 10 == 0
 
-    def has_same_parities(self):
+    def has_same_parities(self) -> bool:
         return self.operant1.py_number % 2 == self.operant2.py_number % 2
 
 

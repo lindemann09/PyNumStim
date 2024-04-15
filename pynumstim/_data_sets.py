@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from ._mplist import MathProblemList
-from ._problem import MathProblem
+from ._problem import MathProblem, TProperties
 
 FLD = "datasets"
+
 
 class Datasets:
 
@@ -31,7 +32,8 @@ class Datasets:
                       decade_results=True,
                       tie_problem=True,
                       negative_results=True,
-                      properties: Optional[Dict[str, Any]] = None) -> MathProblemList:
+                      carry_problems=True,
+                      properties: Optional[TProperties] = None) -> MathProblemList:
         """creates a MathProblemList comprising the defined problem space
         """
         if incorrect_deviations is None:
@@ -52,7 +54,9 @@ class Datasets:
                             continue
                         if not negative_results and (result < 0 or correct < 0):
                             continue
-
+                        n_carry = p.n_carry()
+                        if not carry_problems and (n_carry is None or n_carry > 0):
+                            continue
                         p.result = p.calc() + dev
                         if isinstance(properties, Dict):
                             p.update_properties(properties)

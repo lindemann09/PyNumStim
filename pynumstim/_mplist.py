@@ -1,15 +1,14 @@
-
 from __future__ import annotations
 
 from pathlib import Path
 from random import randint, shuffle
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 import toml
 
-from ._number import NumType
-from ._problem import MathProblem
+from ._number import TNum
+from ._problem import MathProblem, TProperties
 
 
 class MathProblemList(object):
@@ -18,7 +17,10 @@ class MathProblemList(object):
         self.list: List[MathProblem] = []
 
     def __str__(self):
-        return str(self.data_frame())
+        rtn = ""
+        for x in self.list:
+            rtn += str(x) + "\n"
+        return rtn
 
     def append(self, problem: Union[MathProblem, MathProblemList]):
         if isinstance(problem, MathProblem):
@@ -27,11 +29,11 @@ class MathProblemList(object):
             for x in problem.list:
                 self.list.append(x)
 
-    def add(self, first_operant: NumType | str,
+    def add(self, first_operant: TNum | str,
             operation: str,
-            second_operant: NumType | str,
-            result: Optional[NumType | str] = None,
-            properties: Optional[Dict[str, Any]] = None):
+            second_operant: TNum | str,
+            result: Optional[TNum | str] = None,
+            properties: Optional[Optional[TProperties]] = None):
 
         self.append(MathProblem(operant1=first_operant, operation=operation,
                                 operant2=second_operant, result=result,
@@ -45,12 +47,18 @@ class MathProblemList(object):
             rtn.append(self.list.pop(index))
         return rtn
 
-    def find(self, first_operant: Optional[NumType] = None,
+    def find(self, first_operant: Optional[TNum] = None,
              operation: Optional[str] = None,
-             second_operant: Optional[NumType] = None,
+             second_operant: Optional[TNum] = None,
              correct: Optional[bool] = None,
-             result: Optional[NumType] = None,
-             deviation: Optional[NumType] = None) -> MathProblemList:
+             result: Optional[TNum] = None,
+             deviation: Optional[TNum] = None,
+             n_carry: Optional[int] = None,
+             is_tie: Optional[bool] = None,
+             has_same_parities: Optional[bool] = None,
+             has_decade_solution: Optional[bool] = None,
+             problem_size: Optional[float] = None,
+             properties: Optional[TProperties] = None) -> MathProblemList:
 
         lst = self.list
         if first_operant is not None:
@@ -65,6 +73,20 @@ class MathProblemList(object):
             lst = [x for x in lst if x.result == result]
         if deviation is not None:
             lst = [x for x in lst if x.deviation() == deviation]
+        if n_carry is not None:
+            lst = [x for x in lst if x.n_carry() == n_carry]
+        if is_tie is not None:
+            lst = [x for x in lst if x.is_tie() == is_tie]
+        if problem_size is not None:
+            lst = [x for x in lst if x.problem_size() == problem_size]
+        if has_same_parities is not None:
+            lst = [x for x in lst if x.has_same_parities() == has_same_parities]
+        if has_decade_solution is not None:
+            lst = [x for x in lst if x.has_decade_solution() == deviation]
+
+        if properties is not None:
+            lst = [x for x in lst if x.has_properites(properties)]
+
         rtn = MathProblemList()
         for x in lst:
             rtn.append(x)
@@ -78,7 +100,7 @@ class MathProblemList(object):
                    problem_size=False,
                    n_carry=False) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
-        dicts = [a.as_dict(problem_size=problem_size, n_carry=n_carry)
+        dicts = [a.problem_dict(problem_size=problem_size, n_carry=n_carry)
                  for a in self.list]
         rtn = pd.DataFrame(dicts)
         if first_id is not None:
@@ -94,6 +116,12 @@ class MathProblemList(object):
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
         return df
+
+    def to_toml(self, filename: Union[Path, str]) -> pd.DataFrame:
+        """pandas data frame, includes problem ids, if first_id is defined"""
+        # FIXME categories are lots
+
+        pass
 
     def import_toml(self, filename: Union[Path, str]):
         return self.import_dict(toml.load(filename))
