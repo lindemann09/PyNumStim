@@ -95,6 +95,11 @@ class MathProblemList(object):
     def shuffel(self):
         shuffle(self.list)
 
+    def update_properties(self, properties:TProperties):
+        """updates the properties of all problems"""
+        for x in self.list:
+            x.update_properties(properties)
+
     def data_frame(self,
                    first_id: Optional[int] = None,
                    problem_size=False,
