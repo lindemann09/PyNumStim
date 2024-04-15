@@ -9,4 +9,4 @@ __version__ = "0.2-dev1"
 from ._problem import MathProblem
 from ._mplist import MathProblemList
 from ._data_sets import Datasets
-from ._number import Num
+from ._number import Num, TNum, TPyNum

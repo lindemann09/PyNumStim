@@ -110,18 +110,17 @@ class MathProblemList(object):
     def to_csv(self, filename: Union[Path, str],
                first_id: Optional[int] = None,
                problem_size=False,
-               n_carry=False) -> pd.DataFrame:
+               n_carry=False,
+               rounding_digits:int=2) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
-        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
+        df.round(rounding_digits).to_csv(filename, sep="\t", index=False, lineterminator="\n")
         return df
 
-    def to_toml(self, filename: Union[Path, str]) -> pd.DataFrame:
-        """pandas data frame, includes problem ids, if first_id is defined"""
-        # FIXME categories are lots
-
-        pass
+    #def to_toml(self, filename: Union[Path, str]) -> pd.DataFrame:
+    #    """pandas data frame, includes problem ids, if first_id is defined"""
+    #    # FIXME categories are lots
 
     def import_toml(self, filename: Union[Path, str]):
         return self.import_dict(toml.load(filename))

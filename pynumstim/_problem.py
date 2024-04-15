@@ -13,6 +13,8 @@ SYMBOL_NAMES = {"=": "equal",
                 "*": "multiply",
                 "/": "divide",
                 "-": "minus"}
+LATEX_TIMES = "\\times" #"\\cdot"
+
 TProperties = Dict[str, Any]
 
 
@@ -169,7 +171,11 @@ class MathProblem(object):
     def tex(self) -> str:
         o1 = self._op1.tex()
         o2 = self._op2.tex()
-        rtn = f"{o1} {self.operation} {o2}"
+        if self.operation == "*":
+            operation = LATEX_TIMES
+        else:
+            operation = self.operation
+        rtn = f"{o1} {operation} {o2}"
         if self._result is not None:
             rtn += f" = {self._result.tex()}"
         return rtn
