@@ -10,6 +10,12 @@
 
 Project homepage: https://github.com/lindemann09/PyNumStim
 
+## Install via pip
+
+```
+pip install pynumstim
+```
+
 
 ## Requirements
 
