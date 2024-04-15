@@ -115,7 +115,8 @@ class MathProblemList(object):
         """pandas data frame, includes problem ids, if first_id is defined"""
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
-        df.round(rounding_digits).to_csv(filename, sep="\t", index=False, lineterminator="\n")
+        df = df.round(rounding_digits)
+        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
         return df
 
     #def to_toml(self, filename: Union[Path, str]) -> pd.DataFrame:

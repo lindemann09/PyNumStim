@@ -13,7 +13,7 @@ SYMBOL_NAMES = {"=": "equal",
                 "*": "multiply",
                 "/": "divide",
                 "-": "minus"}
-LATEX_TIMES = "\\times" #"\\cdot"
+LATEX_TIMES = "\\times"  # "\\cdot"
 
 TProperties = Dict[str, Any]
 
@@ -252,7 +252,7 @@ class MathProblem(object):
         return ncarry
 
     def problem_size(self) -> float:
-        return (self.operant1.py_number + self.operant1.py_number) / 2.0
+        return (_size(self.operant1) + _size(self.operant1)) / 2.0
 
     @staticmethod
     def parse(txt: str, properties: Optional[TProperties] = None) -> MathProblem:
@@ -300,3 +300,12 @@ def _split_after_digit(txt: str, letter: str):
         return txt[:a.span()[0]+1], txt[a.span()[1]:]
     else:
         return txt
+
+
+def _size(num: Num) -> TPyNum:
+    """helper for calculation problem size with fractions.
+    In this case, return mean of numerator and denomintor"""
+    if num.is_fraction():
+        return (num.numerator + num.denominator) / 2.0
+    else:
+        return num.py_number
