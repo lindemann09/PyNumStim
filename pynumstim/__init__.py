@@ -4,7 +4,7 @@ creating math problem stimuli with latex formulas and dvipng
 """
 
 __author__ = "Oliver Lindemann"
-__version__ = "0.2"
+__version__ = "0.2.1"
 
 from ._problem import MathProblem
 from ._mplist import MathProblemList

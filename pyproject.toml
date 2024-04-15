@@ -6,8 +6,16 @@ build-backend = "flit_core.buildapi"
 name = "pynumstim"
 authors = [{name = "Oliver Lindemann", email = "lindemann@essb.eur.nl"}]
 license = {file = "LICENSE"}
-classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
+readme = "README.md"
+keywords = ["experiment control", "open science",
+            "experimental psychology"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent"
+]
+
 requires-python = ">=3.10"
 dependencies =  ["pandas>=2.1", "toml>=0.10.2", "sympy>=1.12"]
 
