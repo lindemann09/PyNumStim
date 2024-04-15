@@ -159,12 +159,33 @@ class MathProblemList(object):
         """
         return self.import_dict(toml.load(filename))
 
+    def import_markdown_text(self, text:str):
+        """important markdown text.
+
+        see also
+        --------
+        `import_markdown`
+        """
+        curr_cat = None
+        for l in text.splitlines():
+            x = re.match(r"^\s*#+\s+", l)
+            if isinstance(x, re.Match):
+                curr_cat = l[x.span()[1]:].strip()
+            else:
+                x = re.match(r"^\s*\*+\s+", l)
+                if isinstance(x, re.Match):
+                    problem_str = l[x.span()[1]:].strip()
+                    p = MathProblem.parse(problem_str)
+                    if curr_cat is not None:
+                        p.update_properties({"category": curr_cat})
+                    self.append(p)
+
     def import_markdown(self, filename: Union[Path, str]):
         """importing from markdown file
 
         Example
         -------
-        Markdown file:
+        Markdown text:
             ```
             # CATEGORY NAME
 
@@ -176,19 +197,8 @@ class MathProblemList(object):
             ```
         """
         with open(filename, "r", encoding="utf-8") as fl:
-            curr_cat = None
-            for l in fl:
-                x = re.match(r"^\s*#+\s+", l)
-                if isinstance(x, re.Match):
-                    curr_cat = l[x.span()[1]:].strip()
-                else:
-                    x = re.match(r"^\s*\*+\s+", l)
-                    if isinstance(x, re.Match):
-                        problem_str = l[x.span()[1]:].strip()
-                        p = MathProblem.parse(problem_str)
-                        if curr_cat is not None:
-                            p.update_properties({"category": curr_cat})
-                        self.append(p)
+            text = fl.read()
+        self.import_markdown_text(text)
 
     def import_dict(self, problem_dict: dict,
                     categories: Union[None, str, Tuple[str], List[str]] = None):
