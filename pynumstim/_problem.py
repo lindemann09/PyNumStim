@@ -207,8 +207,6 @@ class MathProblem(object):
     def is_correct(self):
         if self._result is None:
             return False
-        print(self.calc())
-        print(type(self._op1))
         return self.calc() == self._result.py_number
 
     def n_carry(self) -> Optional[int]:
