@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from random import randint, shuffle
 from typing import List, Optional, Tuple, Union
+import re
 
 import pandas as pd
 import toml
@@ -129,11 +130,7 @@ class MathProblemList(object):
     #    # FIXME categories are lots
 
     def import_toml(self, filename: Union[Path, str]):
-        return self.import_dict(toml.load(filename))
-
-    def import_dict(self, problem_dict: dict,
-                    sections: Union[None, str, Tuple[str], List[str]] = None):
-        """imports dicts
+        """imports toml
 
         the following methods exist (illustrated by toml representation):
         method a:
@@ -160,12 +157,49 @@ class MathProblemList(object):
             problem_dict: _description_
             sections: _description_. Defaults to None.
         """
-        if sections is None:
-            sections = list(problem_dict.keys())
-        elif isinstance(sections, (tuple, list)):
-            sections = list(sections)
+        return self.import_dict(toml.load(filename))
 
-        for s in sections:
+    def import_markdown(self, filename: Union[Path, str]):
+        """importing from markdown file
+
+        Example
+        -------
+        Markdown file:
+            ```
+            # CATEGORY NAME
+
+            * 1 + 2 = 2
+            * 23_26 - 1_2 = 8
+
+            comment
+            * 4 / 7 = 19
+            ```
+        """
+        with open(filename, "r", encoding="utf-8") as fl:
+            curr_cat = None
+            for l in fl:
+                x = re.match(r"^\s*#+\s+", l)
+                if isinstance(x, re.Match):
+                    curr_cat = l[x.span()[1]:].strip()
+                else:
+                    x = re.match(r"^\s*\*+\s+", l)
+                    if isinstance(x, re.Match):
+                        problem_str = l[x.span()[1]:].strip()
+                        p = MathProblem.parse(problem_str)
+                        if curr_cat is not None:
+                            p.update_properties({"category": curr_cat})
+                        self.append(p)
+
+    def import_dict(self, problem_dict: dict,
+                    categories: Union[None, str, Tuple[str], List[str]] = None):
+        """see doc import toml for structure of dict"""
+
+        if categories is None:
+            categories = list(problem_dict.keys())
+        elif isinstance(categories, (tuple, list)):
+            categories = list(categories)
+
+        for s in categories:
             prop = {"category": s}
             d = problem_dict[s]
             if "problems" in d:
