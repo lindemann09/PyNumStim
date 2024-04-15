@@ -158,5 +158,5 @@ cython_debug/
 ## test runs
 ttest*
 stim/
-
+*.png
 aristim

@@ -8,12 +8,12 @@ from typing import Any, Dict, Optional
 
 from ._number import Num, TNum, TPyNum
 
-SYMBOL_NAMES = {"=": "equal",
+LATEX_TIMES = "\\times"  # "\\cdot"
+LATEX_SYMBOL_NAMES = {"=": "equal",
                 "+": "plus",
-                "*": "multiply",
+                LATEX_TIMES: "multiply",
                 "/": "divide",
                 "-": "minus"}
-LATEX_TIMES = "\\times"  # "\\cdot"
 
 TProperties = Dict[str, Any]
 
