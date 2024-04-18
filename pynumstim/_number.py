@@ -53,21 +53,19 @@ class Num(object):
     @property
     def py_number(self) -> TPyNum:
         """returns Python Rational (int, Fraction) or float  for calculations"""
-        if isinstance(self.numerator, Num):
-            n = self.numerator.py_number
+        if self.denominator == 1: # is not fraction
+            return self.numerator
+        elif isinstance(self.numerator, float) or isinstance(self.denominator, float):
+            return self.numerator / self.denominator
         else:
-            n = self.numerator
-        if isinstance(self.denominator, Num):
-            d = self.denominator.py_number
-        else:
-            d = self.denominator
+            return Fraction(self.numerator, self.denominator)
 
-        if d == 1:
-            return n
-        if isinstance(n, float) or isinstance(d, float):
-            return n / d
+    @property
+    def number_type(self) -> type:
+        if self.denominator != 1:
+            return Fraction
         else:
-            return Fraction(n, d)
+            return type(self.numerator)
 
     def is_fraction(self):
         return self.denominator != 1

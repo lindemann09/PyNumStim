@@ -4,7 +4,7 @@ import re
 from copy import copy
 from fractions import Fraction
 from hashlib import md5
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 from ._number import Num, TNum, TPyNum
 
@@ -81,6 +81,15 @@ class MathProblem(object):
             self._operation = "/"
         else:
             self._operation = val
+
+    @property
+    def number_types(self) -> Set[type]:
+        rtn = set((self.operant1.number_type, self.operant2.number_type))
+        if self.result is not None:
+            rtn.add(self.result.number_type)
+            return rtn
+        else:
+            return rtn
 
     def operation_label(self):
         if self._operation == "*":
@@ -279,13 +288,13 @@ class MathProblem(object):
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
-    def is_tie(self) -> bool:
-        return self.operant1 == self.operant2
+    def same_operants(self) -> bool:
+        return self.operant1.py_number == self.operant2.py_number
 
-    def has_decade_solution(self) -> bool:
+    def decade_solution(self) -> bool:
         return self.calc() % 10 == 0
 
-    def has_same_parities(self) -> bool:
+    def same_parities(self) -> bool:
         return self.operant1.py_number % 2 == self.operant2.py_number % 2
 
 
