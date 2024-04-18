@@ -26,8 +26,8 @@ class Datasets:
 
     @staticmethod
     def problem_space(operation: str,
-                      operant1: List[int],
-                      operant2: List[int],
+                      operand1: List[int],
+                      operand2: List[int],
                       incorrect_deviations: Optional[List[int]] = None,
                       decade_results=True,
                       tie_problem=True,
@@ -43,8 +43,8 @@ class Datasets:
         inc_dev.add(0)  # correct result
 
         rtn = MathProblemList()
-        for op1 in operant1:
-            for op2 in operant2:
+        for op1 in operand1:
+            for op2 in operand2:
                 if tie_problem or op1 != op2:
                     for dev in inc_dev:
                         p = MathProblem(op1, operation, op2)

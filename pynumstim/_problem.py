@@ -25,9 +25,9 @@ class MathProblem(object):
     OPERATIONS = ["+", "-", "*", "/", LABEL_MULTI, LABEL_DIVIDE]
 
     def __init__(self,
-                 operant1: TNum,
+                 operand1: TNum,
                  operation: str,
-                 operant2: TNum,
+                 operand2: TNum,
                  result: Optional[TNum] = None,
                  properties: Optional[TProperties] = None) -> None:
         """properties: dict of properties.
@@ -35,25 +35,25 @@ class MathProblem(object):
         """
 
         self.operation = operation
-        self.operant1 = operant1
-        self.operant2 = operant2
+        self.operand1 = operand1
+        self.operand2 = operand2
         self.result = result
         self.properties = copy(properties)
 
     @property
-    def operant1(self) -> Num:
+    def operand1(self) -> Num:
         return self._op1
 
-    @operant1.setter
-    def operant1(self, val: TNum):
+    @operand1.setter
+    def operand1(self, val: TNum):
         self._op1 = Num(val)
 
     @property
-    def operant2(self) -> Num:
+    def operand2(self) -> Num:
         return self._op2
 
-    @operant2.setter
-    def operant2(self, val: TNum):
+    @operand2.setter
+    def operand2(self, val: TNum):
         self._op2 = Num(val)
 
     @property
@@ -84,7 +84,7 @@ class MathProblem(object):
 
     @property
     def number_types(self) -> Set[type]:
-        rtn = set((self.operant1.number_type, self.operant2.number_type))
+        rtn = set((self.operand1.number_type, self.operand2.number_type))
         if self.result is not None:
             rtn.add(self.result.number_type)
             return rtn
@@ -222,7 +222,7 @@ class MathProblem(object):
         """number of carry operations for addition and subtraction
         else None"""
 
-        if self.operant1.is_fraction() or self.operant2.is_fraction():
+        if self.operand1.is_fraction() or self.operand2.is_fraction():
             return None
         if self.operation == "+":
             subtraction = False
@@ -231,8 +231,8 @@ class MathProblem(object):
         else:
             return None
 
-        str_op1 = str(self.operant1)
-        str_op2 = str(self.operant2)
+        str_op1 = str(self.operand1)
+        str_op2 = str(self.operand2)
         # Get the length of the longer number
         max_length = max(len(str_op1), len(str_op2))
         # Add leading zeros to make the numbers have the same length
@@ -259,7 +259,7 @@ class MathProblem(object):
         return ncarry
 
     def problem_size(self) -> float:
-        return (_size(self.operant1) + _size(self.operant1)) / 2.0
+        return (_size(self.operand1) + _size(self.operand2)) / 2.0
 
     @staticmethod
     def parse(txt: str, properties: Optional[TProperties] = None) -> MathProblem:
@@ -288,14 +288,14 @@ class MathProblem(object):
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
-    def same_operants(self) -> bool:
-        return self.operant1.py_number == self.operant2.py_number
+    def same_operands(self) -> bool:
+        return self.operand1.py_number == self.operand2.py_number
 
     def decade_solution(self) -> bool:
         return self.calc() % 10 == 0
 
     def same_parities(self) -> bool:
-        return self.operant1.py_number % 2 == self.operant2.py_number % 2
+        return self.operand1.py_number % 2 == self.operand2.py_number % 2
 
 
 def _split_after_digit(txt: str, letter: str):

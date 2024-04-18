@@ -65,8 +65,8 @@ def _from_problem(
         os.makedirs(folder, exist_ok=True)
         _create_latex_symbols(folder, resolution=resolution, fg=fg, bg=bg)
         stim = set()
-        stim.add((problem.operant1.tex(), problem.operant1.label()))
-        stim.add((problem.operant2.tex(), problem.operant2.label()))
+        stim.add((problem.operand1.tex(), problem.operand1.label()))
+        stim.add((problem.operand2.tex(), problem.operand2.label()))
         if problem.result is not None:
             stim.add((problem.result.tex(), problem.result.label()))
         for tex, label in stim:
@@ -102,8 +102,8 @@ def _from_problem_list(
         # problem_stimuli
         stim = set()
         for x in problems.list:
-            stim.add((x.operant1.tex(), x.operant1.label()))
-            stim.add((x.operant2.tex(), x.operant2.label()))
+            stim.add((x.operand1.tex(), x.operand1.label()))
+            stim.add((x.operand2.tex(), x.operand2.label()))
             if x.result is not None:
                 stim.add((x.result.tex(), x.result.label()))
 
