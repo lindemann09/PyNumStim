@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import copy
+from fractions import Fraction
 from pathlib import Path
 from random import randint, shuffle
 from typing import List, Optional, Set, Tuple, Union
@@ -139,6 +140,15 @@ class MathProblemList(object):
         rtn = pd.DataFrame(dicts)
         if first_id is not None:
             rtn['problem_id'] = range(first_id, first_id+len(rtn))
+
+        if Fraction not in self.number_types:
+            if float in self.number_types:
+                t = float
+            else:
+                t = int
+            for x in ['op1', 'op2', 'result']:
+                rtn[x] = rtn[x].astype(t, errors='ignore', copy=False)
+        self.number_types
         return rtn
 
     def to_csv(self, filename: Union[Path, str],
@@ -253,5 +263,9 @@ class MathProblemList(object):
                         self.append(p)
 
     def import_data_frame(self, df:pd.DataFrame):
-        pass
+        for _, row in df.iterrows():
+            self.add(first_operant=row['op1'],
+                     operation=row['operation'],
+                     second_operant=row['op2'],
+                     result=row['result'])
 
