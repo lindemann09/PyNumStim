@@ -302,7 +302,7 @@ class MathProblemList(object):
             n_smaller: int,
             n_larger: int,
             dev_corr: int | float = 1,
-            dev_mean_operand: float = 0.25,
+            dev_mean_operand: Optional[float] = None,
             min_result:Optional[int|float] = None,
             max_result:Optional[int|float] = None,
             max_iterations:int = 10000
@@ -323,6 +323,10 @@ class MathProblemList(object):
         pl = deepcopy(self)
         pl.set_results(dev_corr=0)
         df = pl.data_frame()
+        if max_result is not None:
+            df = df[df['result'] <= max_result]
+        if min_result is not None:
+            df = df[df['result'] >= min_result]
 
         n = 0
         while True:
@@ -332,30 +336,31 @@ class MathProblemList(object):
             # smaller
             df_smaller = df.sample(n=n_smaller, replace=False)
             df_smaller['result'] = df_smaller['result'] - dev_corr
-            if min_result is not None and (df_smaller['result'] < min_result).any():
+            if min_result  and (df_smaller['result'] < min_result).any():
                 continue
             # larger
             df_larger = df.sample(n=n_larger, replace=False)
             df_larger['result'] = df_larger['result'] + dev_corr
-            if max_result is not None and (df_larger['result'] > max_result).any():
+            if max_result and (df_larger['result'] > max_result).any():
                 continue
             # correct
             df_c = df.sample(n=n_correct, replace=False)
 
-            # calc means
-            m_op = df_c['op1'].mean()
-            m_op_s = df_smaller['op1'].mean()
-            m_op_l = df_larger['op1'].mean()
-            if abs(m_op - m_op_s) > dev_mean_operand or \
-                abs(m_op - m_op_l) > dev_mean_operand:
-                continue
+            if dev_mean_operand is not None:
+                # calc means
+                m_op = df_c['op1'].mean()
+                m_op_s = df_smaller['op1'].mean()
+                m_op_l = df_larger['op1'].mean()
+                if (abs(m_op - m_op_s) > dev_mean_operand or \
+                    abs(m_op - m_op_l) > dev_mean_operand):
+                    continue
 
-            m_op = df_c['op2'].mean()
-            m_op_s = df_smaller['op2'].mean()
-            m_op_l = df_larger['op2'].mean()
-            if abs(m_op - m_op_s) > dev_mean_operand or \
-                abs(m_op - m_op_l) > dev_mean_operand:
-                continue
+                m_op = df_c['op2'].mean()
+                m_op_s = df_smaller['op2'].mean()
+                m_op_l = df_larger['op2'].mean()
+                if (abs(m_op - m_op_s) > dev_mean_operand or \
+                    abs(m_op - m_op_l) > dev_mean_operand):
+                    continue
 
             break
 
