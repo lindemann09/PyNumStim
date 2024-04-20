@@ -176,19 +176,20 @@ class MathProblemList(object):
                 t = int
             for x in ['op1', 'op2', 'result']:
                 rtn[x] = rtn[x].astype(t, errors='ignore', copy=False)
-        self.number_types
+
         return rtn
 
     def to_csv(self, filename: Union[Path, str],
                first_id: Optional[int] = None,
                problem_size=False,
                n_carry=False,
+               sep = ",",
                rounding_digits:int=2) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df = df.round(rounding_digits)
-        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
+        df.to_csv(filename, sep=sep, index=False, lineterminator="\n")
         return df
 
 
