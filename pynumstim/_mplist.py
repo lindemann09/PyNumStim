@@ -7,6 +7,7 @@ from random import randint, shuffle
 from typing import List, Optional, Set, Tuple, Union
 import re
 
+import numpy as np
 import pandas as pd
 import toml
 
@@ -189,7 +190,7 @@ class MathProblemList(object):
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df = df.round(rounding_digits)
-        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
+        df.to_csv(filename, sep=sep, index=False, lineterminator="\n")
         return df
 
 
@@ -302,7 +303,7 @@ class MathProblemList(object):
                        n_correct: int,
                        n_smaller: int,
                        n_larger: int,
-                       dev_corr: int | float = 1,
+                       dev_corr: List[int | float] | int | float = 1,
                        dev_mean_operand: Optional[float] = None,
                        min_result: Optional[int | float] = None,
                        max_result: Optional[int | float] = None,
@@ -311,16 +312,31 @@ class MathProblemList(object):
         """select problems with correct and incorrect results and with a maximum
         deviation of mean operands between correct and incorrect problems
 
+        dev_corr: number or list of number
+                list of specifies the deviations from correct result
+
         min_result and max_result: the minimum and maximum value of the
         correct and incorrect results
 
         returns a new MathProblemList with a copies of the selected problems
         """
 
-        if dev_corr <= 0:
-            raise RuntimeError("dev correct has to be large 0")
+        # make lists deviation lists: dcorr
+        if isinstance(dev_corr, (int, float)):
+            dcorr = np.asarray([dev_corr])
+        elif isinstance(dev_corr, (list, tuple)):
+            dcorr = np.asarray(dev_corr)
+        else:
+            raise ValueError("dev_corr has to be a int, float or list of int or float")
 
-        # set all problem as correct and create df
+        for x in dcorr:
+            if x <= 0:
+                raise RuntimeError("dev_corr has to be large 0")
+        # enlarge list
+        while len(dcorr) < n_smaller or len(dcorr)<n_larger:
+            dcorr = np.append(dcorr, dcorr)
+
+        # copy all problem, set as correct and create df
         pl = deepcopy(self)
         pl.set_results(dev_corr=0)
         df = pl.data_frame()
@@ -336,12 +352,12 @@ class MathProblemList(object):
             n = n + 1
             # smaller
             df_smaller = df.sample(n=n_smaller, replace=False)
-            df_smaller['result'] = df_smaller['result'] - dev_corr
+            df_smaller['result'] = df_smaller['result'] - dcorr[:n_smaller]
             if min_result and (df_smaller['result'] < min_result).any():
                 continue
             # larger
             df_larger = df.sample(n=n_larger, replace=False)
-            df_larger['result'] = df_larger['result'] + dev_corr
+            df_larger['result'] = df_larger['result'] + dcorr[:n_larger]
             if max_result and (df_larger['result'] > max_result).any():
                 continue
             # correct
