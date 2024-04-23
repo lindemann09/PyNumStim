@@ -18,7 +18,7 @@ class MathProblemList(object):
 
     def __init__(self):
         self._list: List[MathProblem] = []
-        self.number_types: Set[type] = set() # involved number types
+        self.number_types: Set[type] = set()  # involved number types
 
     def __str__(self):
         rtn = ""
@@ -31,7 +31,7 @@ class MathProblemList(object):
         return self._list
 
     @list.setter
-    def list(self, val:List[MathProblem]):
+    def list(self, val: List[MathProblem]):
         self._list = val
         self.number_types: Set[type] = set()
         for x in self._list:
@@ -56,7 +56,7 @@ class MathProblemList(object):
                                 properties=properties))
 
     def get_random(self, n: int = 1,
-                   dev_corr:Optional[int|float]=None) -> MathProblemList:
+                   dev_corr: Optional[int | float] = None) -> MathProblemList:
         """Get x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
@@ -71,7 +71,7 @@ class MathProblemList(object):
         return rtn
 
     def pop_random(self, n: int = 1,
-                   dev_corr:Optional[int|float]=None) -> MathProblemList:
+                   dev_corr: Optional[int | float] = None) -> MathProblemList:
         """Pop x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
@@ -87,18 +87,17 @@ class MathProblemList(object):
             rtn.append(p)
         return rtn
 
-    def set_results(self, dev_corr:int|float):
+    def set_results(self, dev_corr: int | float):
         """Sets results of all problem to a value that deviation from
         correct result by `dev_corr`. Thus, `dev_corr=0` returns correct problems.
 
         Note
         ----
         Setting results does not work (yet) for fractions
-        """ # TODO
+        """  # TODO
 
         for x in range(len(self._list)):
             self._list[x].result = self._list[x].calc() + dev_corr
-
 
     def find(self,
              first_operand: Optional[TNum] = None,
@@ -153,7 +152,7 @@ class MathProblemList(object):
     def shuffel(self):
         shuffle(self._list)
 
-    def update_properties(self, properties:TProperties):
+    def update_properties(self, properties: TProperties):
         """updates the properties of all problems"""
         for x in self._list:
             x.update_properties(properties)
@@ -176,21 +175,21 @@ class MathProblemList(object):
                 t = int
             for x in ['op1', 'op2', 'result']:
                 rtn[x] = rtn[x].astype(t, errors='ignore', copy=False)
-        self.number_types
+
         return rtn
 
     def to_csv(self, filename: Union[Path, str],
                first_id: Optional[int] = None,
                problem_size=False,
                n_carry=False,
-               rounding_digits:int=2) -> pd.DataFrame:
+               rounding_digits: int = 2,
+               sep: str = '\t') -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df = df.round(rounding_digits)
-        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
+        df.to_csv(filename, sep=sep, index=False, lineterminator="\n")
         return df
-
 
     def import_toml(self, filename: Union[Path, str]):
         """imports toml
@@ -222,7 +221,7 @@ class MathProblemList(object):
         """
         return self.import_dict(toml.load(filename))
 
-    def import_markdown_text(self, text:str):
+    def import_markdown_text(self, text: str):
         """important markdown text.
 
         see also
@@ -290,7 +289,7 @@ class MathProblemList(object):
                                         properties=prop)
                         self.append(p)
 
-    def import_data_frame(self, df:pd.DataFrame):
+    def import_data_frame(self, df: pd.DataFrame):
         for _, row in df.iterrows():
             self.add(first_operand=row['op1'],
                      operation=row['operation'],
@@ -298,15 +297,15 @@ class MathProblemList(object):
                      result=row['result'])
 
     def rand_selection(self,
-            n_correct: int,
-            n_smaller: int,
-            n_larger: int,
-            dev_corr: int | float = 1,
-            dev_mean_operand: Optional[float] = None,
-            min_result:Optional[int|float] = None,
-            max_result:Optional[int|float] = None,
-            max_iterations:int = 10000
-            ) -> MathProblemList:
+                       n_correct: int,
+                       n_smaller: int,
+                       n_larger: int,
+                       dev_corr: int | float = 1,
+                       dev_mean_operand: Optional[float] = None,
+                       min_result: Optional[int | float] = None,
+                       max_result: Optional[int | float] = None,
+                       max_iterations: int = 10000
+                       ) -> MathProblemList:
         """select problems with correct and incorrect results and with a maximum
         deviation of mean operands between correct and incorrect problems
 
@@ -336,7 +335,7 @@ class MathProblemList(object):
             # smaller
             df_smaller = df.sample(n=n_smaller, replace=False)
             df_smaller['result'] = df_smaller['result'] - dev_corr
-            if min_result  and (df_smaller['result'] < min_result).any():
+            if min_result and (df_smaller['result'] < min_result).any():
                 continue
             # larger
             df_larger = df.sample(n=n_larger, replace=False)
@@ -351,15 +350,15 @@ class MathProblemList(object):
                 m_op = df_c['op1'].mean()
                 m_op_s = df_smaller['op1'].mean()
                 m_op_l = df_larger['op1'].mean()
-                if (abs(m_op - m_op_s) > dev_mean_operand or \
-                    abs(m_op - m_op_l) > dev_mean_operand):
+                if (abs(m_op - m_op_s) > dev_mean_operand or
+                        abs(m_op - m_op_l) > dev_mean_operand):
                     continue
 
                 m_op = df_c['op2'].mean()
                 m_op_s = df_smaller['op2'].mean()
                 m_op_l = df_larger['op2'].mean()
-                if (abs(m_op - m_op_s) > dev_mean_operand or \
-                    abs(m_op - m_op_l) > dev_mean_operand):
+                if (abs(m_op - m_op_s) > dev_mean_operand or
+                        abs(m_op - m_op_l) > dev_mean_operand):
                     continue
 
             break
