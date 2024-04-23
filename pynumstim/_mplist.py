@@ -99,6 +99,7 @@ class MathProblemList(object):
         for x in range(len(self._list)):
             self._list[x].result = self._list[x].calc() + dev_corr
 
+
     def find(self,
              first_operand: Optional[TNum] = None,
              operation: Optional[str] = None,
@@ -188,8 +189,9 @@ class MathProblemList(object):
         df = self.data_frame(
             first_id=first_id, problem_size=problem_size, n_carry=n_carry)
         df = df.round(rounding_digits)
-        df.to_csv(filename, sep=sep, index=False, lineterminator="\n")
+        df.to_csv(filename, sep="\t", index=False, lineterminator="\n")
         return df
+
 
     def import_toml(self, filename: Union[Path, str]):
         """imports toml
