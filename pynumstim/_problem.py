@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from abc import ABCMeta
 from copy import copy
 from fractions import Fraction
 from hashlib import md5
@@ -17,8 +18,10 @@ LATEX_SYMBOL_NAMES = {"=": "equal",
 
 TProperties = Dict[str, Any]
 
+class MathProblem(metaclass=ABCMeta):
+    pass
 
-class MathProblem(object):
+class SimpleMathProblem(MathProblem):
 
     LABEL_MULTI = "t"  # multiplication, times
     LABEL_DIVIDE = "d"  # divide
@@ -31,73 +34,42 @@ class MathProblem(object):
                  result: Optional[TNum] = None,
                  properties: Optional[TProperties] = None) -> None:
         """properties: dict of properties.
-                        Keys repesent the property name and must be text strings
+                        Keys represent the property name and must be text strings
         """
 
-        self.operation = operation
-        self.operand1 = operand1
-        self.operand2 = operand2
-        self.result = result
+        self.operand1 = Num(operand1)
+        self.operand2 = Num(operand2)
+
+        if operation not in SimpleMathProblem.OPERATIONS:
+            raise ValueError(f"Unknown operation: '{operation}'")
+        if operation == SimpleMathProblem.LABEL_MULTI:
+            self.operation = "*"
+        elif operation == SimpleMathProblem.LABEL_DIVIDE:
+            self.operation = "/"
+        else:
+            self.operation = operation
+
+        if result is None:
+            self.result = None
+        else:
+            self.result = Num(result)
         self.properties = copy(properties)
 
-    @property
-    def operand1(self) -> Num:
-        return self._op1
-
-    @operand1.setter
-    def operand1(self, val: TNum):
-        self._op1 = Num(val)
-
-    @property
-    def operand2(self) -> Num:
-        return self._op2
-
-    @operand2.setter
-    def operand2(self, val: TNum):
-        self._op2 = Num(val)
-
-    @property
-    def result(self) -> Optional[Num]:
-        return self._result
-
-    @result.setter
-    def result(self, val: Optional[TNum]):
-        if val is None:
-            self._result = None
-        else:
-            self._result = Num(val)
-
-    @property
-    def operation(self) -> str:
-        return self._operation
-
-    @operation.setter
-    def operation(self, val: str):
-        if val not in MathProblem.OPERATIONS:
-            raise ValueError(f"Unknown operation: '{val}'")
-        if val == MathProblem.LABEL_MULTI:
-            self._operation = "*"
-        elif val == MathProblem.LABEL_DIVIDE:
-            self._operation = "/"
-        else:
-            self._operation = val
-
-    @property
     def number_types(self) -> Set[type]:
-        rtn = set((self.operand1.number_type, self.operand2.number_type))
+        rtn = set((self.operand1.number_type(), self.operand2.number_type()))
         if self.result is not None:
-            rtn.add(self.result.number_type)
+            rtn.add(self.result.number_type())
             return rtn
         else:
             return rtn
 
     def operation_label(self):
-        if self._operation == "*":
+        if self.operation == "*":
             return self.LABEL_MULTI
-        elif self._operation == "/":
+        elif self.operation == "/":
             return self.LABEL_DIVIDE
         else:
-            return self._operation
+            return self.operation
 
     def update_properties(self, props: Dict[str, Any]):
         if isinstance(self.properties, dict):
@@ -116,14 +88,14 @@ class MathProblem(object):
 
     def _as_dict(self) -> Dict[str, Any]:
         """minimal dict representation of the problem without properties"""
-        rtn = {'op1': self._op1.label(),
+        rtn = {'op1': self.operand1.label(),
                'operation': self.operation,
-               'op2': self._op2.label()}
+               'op2': self.operand2.label()}
 
-        if self._result is None:
+        if self.result is None:
             rtn['result'] = ""
         else:
-            rtn['result'] = self._result.label()
+            rtn['result'] = self.result.label()
         return rtn
 
     def problem_dict(self,
@@ -132,7 +104,7 @@ class MathProblem(object):
                      n_carry=False) -> Dict[str, str | int | float]:
 
         rtn = self._as_dict()
-        if self._result is not None:
+        if self.result is not None:
             rtn['correct'] = int(self.is_correct())
             rtn['dev'] = self.deviation()
 
@@ -152,8 +124,8 @@ class MathProblem(object):
 
     def calc(self) -> TPyNum:
         # returns correct result
-        o1 = self._op1.py_number
-        o2 = self._op2.py_number
+        o1 = self.operand1.py_number()
+        o2 = self.operand2.py_number()
 
         if self.operation == "+":
             return o1 + o2
@@ -172,41 +144,41 @@ class MathProblem(object):
 
     def deviation(self) -> Optional[float]:
         """deviation from correct"""
-        if self._result is None:
+        if self.result is None:
             return None
         else:
-            return float(self._result) - self.calc()
+            return float(self.result) - self.calc()
 
     def tex(self) -> str:
-        o1 = self._op1.tex()
-        o2 = self._op2.tex()
+        o1 = self.operand1.tex()
+        o2 = self.operand2.tex()
         if self.operation == "*":
             operation = LATEX_TIMES
         else:
             operation = self.operation
         rtn = f"{o1} {operation} {o2}"
-        if self._result is not None:
-            rtn += f" = {self._result.tex()}"
+        if self.result is not None:
+            rtn += f" = {self.result.tex()}"
         return rtn
 
     def label(self) -> str:
         """labels not not have no spaces and not the characters \\*{}=
         They can thus be used for filenames and as ids in data tables
         """
-        o1 = self._op1.label()
-        o2 = self._op2.label()
+        o1 = self.operand1.label()
+        o2 = self.operand2.label()
         rtn = f"{o1}{self.operation_label()}{o2}"
-        if self._result is not None:
-            rtn += f"={self._result.label()}"
+        if self.result is not None:
+            rtn += f"={self.result.label()}"
         return rtn
 
     def __str__(self) -> str:
         """text representation"""
-        o1 = self._op1.label()
-        o2 = self._op2.label()
+        o1 = self.operand1.label()
+        o2 = self.operand2.label()
         rtn = f"{o1} {self.operation} {o2}"
-        if self._result is not None:
-            rtn += f" = {self._result.label()}"
+        if self.result is not None:
+            rtn += f" = {self.result.label()}"
         return rtn
 
     def hash(self) -> str:
@@ -214,9 +186,9 @@ class MathProblem(object):
         return md5_object.hexdigest()
 
     def is_correct(self):
-        if self._result is None:
+        if self.result is None:
             return False
-        return self.calc() == self._result.py_number
+        return self.calc() == self.result.py_number()
 
     def n_carry(self) -> Optional[int]:
         """number of carry operations for addition and subtraction
@@ -262,7 +234,7 @@ class MathProblem(object):
         return (_size(self.operand1) + _size(self.operand2)) / 2.0
 
     @staticmethod
-    def parse(txt: str, properties: Optional[TProperties] = None) -> MathProblem:
+    def parse(txt: str, properties: Optional[TProperties] = None) -> SimpleMathProblem:
         """fractions have to presented like in labels: frac5_6
         can also convert labels to problems
         """
@@ -274,7 +246,7 @@ class MathProblem(object):
                 result = Num(x[1])
 
             op1, op2, operation = (None, None, None)
-            for op in MathProblem.OPERATIONS:
+            for op in SimpleMathProblem.OPERATIONS:
                 try:
                     op1, op2 = _split_after_digit(x[0], op)
                     operation = op
@@ -283,19 +255,19 @@ class MathProblem(object):
                     pass
 
             if None not in (op1, op2, operation):
-                return MathProblem(
+                return SimpleMathProblem(
                     op1, operation, op2, result, properties)  # type: ignore
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
     def same_operands(self) -> bool:
-        return self.operand1.py_number == self.operand2.py_number
+        return self.operand1.py_number() == self.operand2.py_number()
 
     def decade_solution(self) -> bool:
         return self.calc() % 10 == 0
 
     def same_parities(self) -> bool:
-        return self.operand1.py_number % 2 == self.operand2.py_number % 2
+        return self.operand1.py_number() % 2 == self.operand2.py_number() % 2
 
 
 def _split_after_digit(txt: str, letter: str):
@@ -315,4 +287,4 @@ def _size(num: Num) -> TPyNum:
     if num.is_fraction():
         return (num.numerator + num.denominator) / 2.0
     else:
-        return num.py_number
+        return num.py_number()

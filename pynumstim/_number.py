@@ -37,20 +37,55 @@ class Num(object):
         return self.numerator / self.denominator
 
     def __add__(self, val2):
-        return Num(self.py_number + Num(val2).py_number)
+        return Num(self.py_number() + Num(val2).py_number())
 
     def __sub__(self, val2):
-        return Num(self.py_number - Num(val2).py_number)
+        return Num(self.py_number() - Num(val2).py_number())
 
     def __mul__(self, val2):
-        return Num(self.py_number * Num(val2).py_number)
+        return Num(self.py_number() * Num(val2).py_number())
 
     def __truediv__(self, val2):
-        return Num(self.py_number / Num(val2).py_number)
+        return Num(self.py_number() / Num(val2).py_number())
 
     __rmul__ = __mul__
 
-    @property
+    def __eq__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() == other.py_number()
+        else:
+            return self.py_number() == Num(other).py_number()
+
+    def __ne__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() != other.py_number()
+        else:
+            return self.py_number() != Num(other).py_number()
+
+    def __lt__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() < other.py_number()
+        else:
+            return self.py_number() < Num(other).py_number()
+
+    def __le__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() <= other.py_number()
+        else:
+            return self.py_number() <= Num(other).py_number()
+
+    def __gt__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() > other.py_number()
+        else:
+            return self.py_number() > Num(other).py_number()
+
+    def __ge__(self, other):
+        if isinstance(other, Num):
+            return self.py_number() >= other.py_number()
+        else:
+            return self.py_number() >= Num(other).py_number()
+
     def py_number(self) -> TPyNum:
         """returns Python Rational (int, Fraction) or float  for calculations"""
         if self.denominator == 1: # is not fraction
@@ -60,7 +95,6 @@ class Num(object):
         else:
             return Fraction(self.numerator, self.denominator)
 
-    @property
     def number_type(self) -> type:
         if self.denominator != 1:
             return Fraction

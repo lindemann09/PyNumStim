@@ -3,12 +3,12 @@ from pathlib import Path
 from typing import Optional, Union
 from sympy import preview
 
-from ._problem import MathProblem, LATEX_SYMBOL_NAMES
+from ._problem import SimpleMathProblem, LATEX_SYMBOL_NAMES
 from ._mplist import MathProblemList
 
 
 def create_images(
-        source: Union[str, MathProblem, MathProblemList],
+        source: Union[str, SimpleMathProblem, MathProblemList],
         path: Optional[Union[Path, str]] = None,
         segmented=False,
         resolution: int = 400,
@@ -16,14 +16,14 @@ def create_images(
         bg: str = "Transparent"):
 
     if path is None:
-        if isinstance(source, MathProblem):
+        if isinstance(source, SimpleMathProblem):
             path = source.label() + ".png"  # use label
         else:
             raise ValueError(
                 f"Path is required, if you create images from {type(source)}"
             )
 
-    if isinstance(source, MathProblem):
+    if isinstance(source, SimpleMathProblem):
         return _from_problem(source, folder=path, segmented=segmented,
                              resolution=resolution, fg=fg, bg=bg)
     elif isinstance(source, MathProblemList):
@@ -47,7 +47,7 @@ def _from_tex(
 
 
 def _from_problem(
-        problem: MathProblem,
+        problem: SimpleMathProblem,
         folder: Union[Path, str],
         segmented: bool = False,
         resolution: int = 400,

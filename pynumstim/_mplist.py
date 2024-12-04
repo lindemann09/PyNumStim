@@ -11,14 +11,14 @@ import numpy as np
 import pandas as pd
 import toml
 
-from ._number import TNum
-from ._problem import MathProblem, TProperties
+from ._number import TNum, Num
+from ._problem import SimpleMathProblem, TProperties
 
 
 class MathProblemList(object):
 
     def __init__(self):
-        self._list: List[MathProblem] = []
+        self._list: List[SimpleMathProblem] = []
         self.number_types: Set[type] = set()  # involved number types
 
     def __str__(self):
@@ -28,33 +28,23 @@ class MathProblemList(object):
         return rtn
 
     @property
-    def list(self) -> List[MathProblem]:
+    def list(self) -> List[SimpleMathProblem]:
         return self._list
 
     @list.setter
-    def list(self, val: List[MathProblem]):
+    def list(self, val: List[SimpleMathProblem]):
         self._list = val
         self.number_types: Set[type] = set()
         for x in self._list:
-            self.number_types = self.number_types | x.number_types
+            self.number_types = self.number_types | x.number_types()
 
-    def append(self, problem: Union[MathProblem, MathProblemList]):
-        if isinstance(problem, MathProblem):
+    def append(self, problem: Union[SimpleMathProblem, MathProblemList]):
+        if isinstance(problem, SimpleMathProblem):
             self._list.append(problem)
-            self.number_types = self.number_types | problem.number_types
+            self.number_types = self.number_types | problem.number_types()
         if isinstance(problem, MathProblemList):
             for x in problem.list:
                 self.append(x)
-
-    def add(self, first_operand: TNum | str,
-            operation: str,
-            second_operand: TNum | str,
-            result: Optional[TNum | str] = None,
-            properties: Optional[Optional[TProperties]] = None):
-
-        self.append(MathProblem(operand1=first_operand, operation=operation,
-                                operand2=second_operand, result=result,
-                                properties=properties))
 
     def get_random(self, n: int = 1,
                    dev_corr: Optional[int | float] = None) -> MathProblemList:
@@ -84,7 +74,7 @@ class MathProblemList(object):
             index = randint(0, len(self._list)-1)
             p = self._list.pop(index)
             if dev_corr is not None:
-                p.result = p.calc() + dev_corr
+                p.result = Num(p.calc() + dev_corr)
             rtn.append(p)
         return rtn
 
@@ -98,7 +88,7 @@ class MathProblemList(object):
         """  # TODO
 
         for x in range(len(self._list)):
-            self._list[x].result = self._list[x].calc() + dev_corr
+            self._list[x].result = Num(self._list[x].calc() + dev_corr)
 
 
     def find(self,
@@ -127,14 +117,14 @@ class MathProblemList(object):
             lst = [x for x in lst if x.is_correct() == correct]
         if result is not None:
             lst = [x for x in lst
-                   if x.result is not None and x.result.py_number == result]
+                   if x.result is not None and x.result.py_number() == result]
         if deviation is not None:
             lst = [x for x in lst if x.deviation() == deviation]
         if n_carry is not None:
             lst = [x for x in lst if x.n_carry() == n_carry]
         if negative_result is not None:
             lst = [x for x in lst
-                   if x.result is not None and (x.result.py_number < 0) == negative_result]
+                   if x.result is not None and (x.result.py_number() < 0) == negative_result]
         if same_operands is not None:
             lst = [x for x in lst if x.same_operands() == same_operands]
         if problem_size is not None:
@@ -240,7 +230,7 @@ class MathProblemList(object):
                 x = re.match(r"^\s*\*+\s+", l)
                 if isinstance(x, re.Match):
                     problem_str = l[x.span()[1]:].strip()
-                    p = MathProblem.parse(problem_str)
+                    p = SimpleMathProblem.parse(problem_str)
                     if curr_cat is not None:
                         p.update_properties({"category": curr_cat})
                     self.append(p)
@@ -280,24 +270,24 @@ class MathProblemList(object):
             if "problems" in d:
                 for x in d["problems"]:
                     if isinstance(x, list):
-                        p = MathProblem(x[0], x[1], x[2])
+                        p = SimpleMathProblem(x[0], x[1], x[2])
                     else:
-                        p = MathProblem.parse(x)
+                        p = SimpleMathProblem.parse(x)
                     p.update_properties(prop)
                     self.append(p)
             if 'op1' in d and 'op2' in d and 'operation' in d:
                 for op1 in d['op1']:
                     for op2 in d['op2']:
-                        p = MathProblem(op1, d['operation'], op2,
+                        p = SimpleMathProblem(op1, d['operation'], op2,
                                         properties=prop)
                         self.append(p)
 
     def import_data_frame(self, df: pd.DataFrame):
         for _, row in df.iterrows():
-            self.add(first_operand=row['op1'],
+            self.append(SimpleMathProblem(operand1=row['op1'],
                      operation=row['operation'],
-                     second_operand=row['op2'],
-                     result=row['result'])
+                     operand2=row['op2'],
+                     result=row['result']))
 
     def rand_selection(self,
                        n_correct: int,

@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from ._mplist import MathProblemList
-from ._problem import MathProblem, TProperties
-
+from ._problem import SimpleMathProblem, TProperties
+from ._number import Num
 FLD = "datasets"
 
 
@@ -47,7 +47,7 @@ class Datasets:
             for op2 in operand2:
                 if tie_problem or op1 != op2:
                     for dev in inc_dev:
-                        p = MathProblem(op1, operation, op2)
+                        p = SimpleMathProblem(op1, operation, op2)
                         correct = p.calc()
                         result = correct + dev
                         if not decade_results and (result % 10 == 0 or correct % 10 == 0):
@@ -57,7 +57,7 @@ class Datasets:
                         n_carry = p.n_carry()
                         if not carry_problems and (n_carry is None or n_carry > 0):
                             continue
-                        p.result = p.calc() + dev
+                        p.result = Num(p.calc() + dev)
                         if isinstance(properties, Dict):
                             p.update_properties(properties)
                         rtn.append(p)
