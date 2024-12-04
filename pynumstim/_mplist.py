@@ -37,12 +37,16 @@ class MathProblemList(object):
         for x in self._list:
             self.number_types = self.number_types | x.number_types()
 
-    def append(self, problem: Union[SimpleMathProblem, MathProblemList]):
+    def append(
+        self, problem: SimpleMathProblem | MathProblemList | List[SimpleMathProblem]
+    ):
         if isinstance(problem, SimpleMathProblem):
             self._list.append(problem)
             self.number_types = self.number_types | problem.number_types()
-        if isinstance(problem, MathProblemList):
-            for x in problem.list:
+        elif isinstance(problem, MathProblemList):
+            self.append(problem.list)
+        elif isinstance(problem, List):
+            for x in problem:
                 self.append(x)
 
     def get_random(
