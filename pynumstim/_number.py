@@ -10,14 +10,17 @@ TPyNum = int | float | Fraction
 class Num(object):
     # Rational number, that will not be normalized as Fractions
 
-    def __init__(self,
-                 numerator: TPyNum | Num | str,  # fixme str to parse
-                 denominator: Optional[int | float] = None) -> None:
-
+    def __init__(
+        self,
+        numerator: TPyNum | Num | str,  # fixme str to parse
+        denominator: Optional[int | float] = None,
+    ) -> None:
         if isinstance(numerator, (Fraction, Num, str)):
             if denominator is not None:
-                raise ValueError("Denominator not allowed, if creating Num from " +
-                                 "Fraction, String or other Num)")
+                raise ValueError(
+                    "Denominator not allowed, if creating Num from "
+                    + "Fraction, String or other Num)"
+                )
             if isinstance(numerator, str):
                 self.numerator, self.denominator = _parse(numerator)
             else:
@@ -88,7 +91,7 @@ class Num(object):
 
     def py_number(self) -> TPyNum:
         """returns Python Rational (int, Fraction) or float  for calculations"""
-        if self.denominator == 1: # is not fraction
+        if self.denominator == 1:  # is not fraction
             return self.numerator
         elif isinstance(self.numerator, float) or isinstance(self.denominator, float):
             return self.numerator / self.denominator

@@ -10,31 +10,36 @@ from typing import Any, Dict, Optional, Set
 from ._number import Num, TNum, TPyNum
 
 LATEX_TIMES = "\\times"  # "\\cdot"
-LATEX_SYMBOL_NAMES = {"=": "equal",
-                "+": "plus",
-                LATEX_TIMES: "multiply",
-                "/": "divide",
-                "-": "minus"}
+LATEX_SYMBOL_NAMES = {
+    "=": "equal",
+    "+": "plus",
+    LATEX_TIMES: "multiply",
+    "/": "divide",
+    "-": "minus",
+}
 
 TProperties = Dict[str, Any]
+
 
 class MathProblem(metaclass=ABCMeta):
     pass
 
-class SimpleMathProblem(MathProblem):
 
+class SimpleMathProblem(MathProblem):
     LABEL_MULTI = "t"  # multiplication, times
     LABEL_DIVIDE = "d"  # divide
     OPERATIONS = ["+", "-", "*", "/", LABEL_MULTI, LABEL_DIVIDE]
 
-    def __init__(self,
-                 operand1: TNum,
-                 operation: str,
-                 operand2: TNum,
-                 result: Optional[TNum] = None,
-                 properties: Optional[TProperties] = None) -> None:
+    def __init__(
+        self,
+        operand1: TNum,
+        operation: str,
+        operand2: TNum,
+        result: Optional[TNum] = None,
+        properties: Optional[TProperties] = None,
+    ) -> None:
         """properties: dict of properties.
-                        Keys represent the property name and must be text strings
+        Keys represent the property name and must be text strings
         """
 
         self.operand1 = Num(operand1)
@@ -88,38 +93,38 @@ class SimpleMathProblem(MathProblem):
 
     def _as_dict(self) -> Dict[str, Any]:
         """minimal dict representation of the problem without properties"""
-        rtn = {'op1': self.operand1.label(),
-               'operation': self.operation,
-               'op2': self.operand2.label()}
+        rtn = {
+            "op1": self.operand1.label(),
+            "operation": self.operation,
+            "op2": self.operand2.label(),
+        }
 
         if self.result is None:
-            rtn['result'] = ""
+            rtn["result"] = ""
         else:
-            rtn['result'] = self.result.label()
+            rtn["result"] = self.result.label()
         return rtn
 
-    def problem_dict(self,
-                     incl_hash=False,
-                     problem_size=False,
-                     n_carry=False) -> Dict[str, str | int | float]:
-
+    def problem_dict(
+        self, incl_hash=False, problem_size=False, n_carry=False
+    ) -> Dict[str, str | int | float]:
         rtn = self._as_dict()
         if self.result is not None:
-            rtn['correct'] = int(self.is_correct())
-            rtn['dev'] = self.deviation()
+            rtn["correct"] = int(self.is_correct())
+            rtn["dev"] = self.deviation()
 
         if problem_size:
-            rtn['prob_size'] = self.problem_size()
+            rtn["prob_size"] = self.problem_size()
         if n_carry:
             nc = self.n_carry()
             if nc is not None:
-                rtn['n_carry'] = nc
+                rtn["n_carry"] = nc
 
-        rtn['label'] = self.label()
+        rtn["label"] = self.label()
         if isinstance(self.properties, dict):
             rtn.update(self.properties)
         if incl_hash:
-            rtn['hash'] = self.hash()
+            rtn["hash"] = self.hash()
         return rtn
 
     def calc(self) -> TPyNum:
@@ -255,8 +260,7 @@ class SimpleMathProblem(MathProblem):
                     pass
 
             if None not in (op1, op2, operation):
-                return SimpleMathProblem(
-                    op1, operation, op2, result, properties)  # type: ignore
+                return SimpleMathProblem(op1, operation, op2, result, properties)  # type: ignore
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
@@ -272,11 +276,11 @@ class SimpleMathProblem(MathProblem):
 
 def _split_after_digit(txt: str, letter: str):
     # splits txt at letter only if a digit proceeds the letter
-    if letter in ["+", "*", "\\"]: # escaping required
+    if letter in ["+", "*", "\\"]:  # escaping required
         letter = f"\\{letter}"
     a = re.search(f"\\d\\s*{letter}", txt)
     if a is not None:
-        return txt[:a.span()[0]+1], txt[a.span()[1]:]
+        return txt[: a.span()[0] + 1], txt[a.span()[1] :]
     else:
         return txt
 

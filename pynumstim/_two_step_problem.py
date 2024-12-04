@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 from typing import Any, Dict, Optional, Set
-from ._problem import MathProblem, SimpleMathProblem, TProperties
+
 from ._number import Num, TNum, TPyNum
+from ._problem import MathProblem, SimpleMathProblem, TProperties
 
 
 class TwoStepMathProblem(MathProblem):
-
     def __init__(
         self,
         operand1: TNum,
@@ -21,14 +22,12 @@ class TwoStepMathProblem(MathProblem):
         """
 
         self.step1 = SimpleMathProblem(
-            operand1=operand1,
-            operation=operation1,
-            operand2=operand2)
+            operand1=operand1, operation=operation1, operand2=operand2
+        )
         self.step2 = SimpleMathProblem(
             operand1=self.step1.calc(),
             operation=operation2,
             operand2=operand3,
             result=result,
-            properties=properties
+            properties=properties,
         )
-

@@ -1,22 +1,21 @@
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from fractions import Fraction
 from pathlib import Path
 from random import randint, shuffle
 from typing import List, Optional, Set, Tuple, Union
-import re
 
 import numpy as np
 import pandas as pd
 import toml
 
-from ._number import TNum, Num
+from ._number import Num, TNum
 from ._problem import SimpleMathProblem, TProperties
 
 
 class MathProblemList(object):
-
     def __init__(self):
         self._list: List[SimpleMathProblem] = []
         self.number_types: Set[type] = set()  # involved number types
@@ -46,8 +45,9 @@ class MathProblemList(object):
             for x in problem.list:
                 self.append(x)
 
-    def get_random(self, n: int = 1,
-                   dev_corr: Optional[int | float] = None) -> MathProblemList:
+    def get_random(
+        self, n: int = 1, dev_corr: Optional[int | float] = None
+    ) -> MathProblemList:
         """Get x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
@@ -61,8 +61,9 @@ class MathProblemList(object):
             rtn.set_results(dev_corr=dev_corr)
         return rtn
 
-    def pop_random(self, n: int = 1,
-                   dev_corr: Optional[int | float] = None) -> MathProblemList:
+    def pop_random(
+        self, n: int = 1, dev_corr: Optional[int | float] = None
+    ) -> MathProblemList:
         """Pop x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
@@ -71,7 +72,7 @@ class MathProblemList(object):
 
         rtn = MathProblemList()
         for _ in range(n):
-            index = randint(0, len(self._list)-1)
+            index = randint(0, len(self._list) - 1)
             p = self._list.pop(index)
             if dev_corr is not None:
                 p.result = Num(p.calc() + dev_corr)
@@ -90,22 +91,22 @@ class MathProblemList(object):
         for x in range(len(self._list)):
             self._list[x].result = Num(self._list[x].calc() + dev_corr)
 
-
-    def find(self,
-             first_operand: Optional[TNum] = None,
-             operation: Optional[str] = None,
-             second_operand: Optional[TNum] = None,
-             correct: Optional[bool] = None,
-             result: Optional[TNum] = None,
-             deviation: Optional[TNum] = None,
-             n_carry: Optional[int] = None,
-             negative_result: Optional[bool] = None,
-             same_operands: Optional[bool] = None,
-             same_parities: Optional[bool] = None,
-             decade_solution: Optional[bool] = None,
-             problem_size: Optional[float] = None,
-             properties: Optional[TProperties] = None) -> MathProblemList:
-
+    def find(
+        self,
+        first_operand: Optional[TNum] = None,
+        operation: Optional[str] = None,
+        second_operand: Optional[TNum] = None,
+        correct: Optional[bool] = None,
+        result: Optional[TNum] = None,
+        deviation: Optional[TNum] = None,
+        n_carry: Optional[int] = None,
+        negative_result: Optional[bool] = None,
+        same_operands: Optional[bool] = None,
+        same_parities: Optional[bool] = None,
+        decade_solution: Optional[bool] = None,
+        problem_size: Optional[float] = None,
+        properties: Optional[TProperties] = None,
+    ) -> MathProblemList:
         lst = self.list
         if first_operand is not None:
             lst = [x for x in lst if x.operand1 == first_operand]
@@ -116,15 +117,22 @@ class MathProblemList(object):
         if correct is not None:
             lst = [x for x in lst if x.is_correct() == correct]
         if result is not None:
-            lst = [x for x in lst
-                   if x.result is not None and x.result.py_number() == result]
+            lst = [
+                x
+                for x in lst
+                if x.result is not None and x.result.py_number() == result
+            ]
         if deviation is not None:
             lst = [x for x in lst if x.deviation() == deviation]
         if n_carry is not None:
             lst = [x for x in lst if x.n_carry() == n_carry]
         if negative_result is not None:
-            lst = [x for x in lst
-                   if x.result is not None and (x.result.py_number() < 0) == negative_result]
+            lst = [
+                x
+                for x in lst
+                if x.result is not None
+                and (x.result.py_number() < 0) == negative_result
+            ]
         if same_operands is not None:
             lst = [x for x in lst if x.same_operands() == same_operands]
         if problem_size is not None:
@@ -149,40 +157,44 @@ class MathProblemList(object):
         for x in self._list:
             x.update_properties(properties)
 
-    def data_frame(self,
-                   first_id: Optional[int] = None,
-                   problem_size=False,
-                   n_carry=False) -> pd.DataFrame:
+    def data_frame(
+        self, first_id: Optional[int] = None, problem_size=False, n_carry=False
+    ) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
-        dicts = [a.problem_dict(problem_size=problem_size, n_carry=n_carry)
-                 for a in self._list]
+        dicts = [
+            a.problem_dict(problem_size=problem_size, n_carry=n_carry)
+            for a in self._list
+        ]
         rtn = pd.DataFrame(dicts)
         if first_id is not None:
-            rtn['problem_id'] = range(first_id, first_id+len(rtn))
+            rtn["problem_id"] = range(first_id, first_id + len(rtn))
 
         if Fraction not in self.number_types:
             if float in self.number_types:
                 t = float
             else:
                 t = int
-            for x in ['op1', 'op2', 'result']:
-                rtn[x] = rtn[x].astype(t, errors='ignore', copy=False)
+            for x in ["op1", "op2", "result"]:
+                rtn[x] = rtn[x].astype(t, errors="ignore", copy=False)
 
         return rtn
 
-    def to_csv(self, filename: Union[Path, str],
-               first_id: Optional[int] = None,
-               problem_size=False,
-               n_carry=False,
-               rounding_digits: int = 2,
-               sep: str = '\t') -> pd.DataFrame:
+    def to_csv(
+        self,
+        filename: Union[Path, str],
+        first_id: Optional[int] = None,
+        problem_size=False,
+        n_carry=False,
+        rounding_digits: int = 2,
+        sep: str = "\t",
+    ) -> pd.DataFrame:
         """pandas data frame, includes problem ids, if first_id is defined"""
         df = self.data_frame(
-            first_id=first_id, problem_size=problem_size, n_carry=n_carry)
+            first_id=first_id, problem_size=problem_size, n_carry=n_carry
+        )
         df = df.round(rounding_digits)
         df.to_csv(filename, sep=sep, index=False, lineterminator="\n")
         return df
-
 
     def import_toml(self, filename: Union[Path, str]):
         """imports toml
@@ -225,11 +237,11 @@ class MathProblemList(object):
         for l in text.splitlines():
             x = re.match(r"^\s*#+\s+", l)
             if isinstance(x, re.Match):
-                curr_cat = l[x.span()[1]:].strip()
+                curr_cat = l[x.span()[1] :].strip()
             else:
                 x = re.match(r"^\s*\*+\s+", l)
                 if isinstance(x, re.Match):
-                    problem_str = l[x.span()[1]:].strip()
+                    problem_str = l[x.span()[1] :].strip()
                     p = SimpleMathProblem.parse(problem_str)
                     if curr_cat is not None:
                         p.update_properties({"category": curr_cat})
@@ -255,8 +267,11 @@ class MathProblemList(object):
             text = fl.read()
         self.import_markdown_text(text)
 
-    def import_dict(self, problem_dict: dict,
-                    categories: Union[None, str, Tuple[str], List[str]] = None):
+    def import_dict(
+        self,
+        problem_dict: dict,
+        categories: Union[None, str, Tuple[str], List[str]] = None,
+    ):
         """see doc import toml for structure of dict"""
 
         if categories is None:
@@ -275,30 +290,34 @@ class MathProblemList(object):
                         p = SimpleMathProblem.parse(x)
                     p.update_properties(prop)
                     self.append(p)
-            if 'op1' in d and 'op2' in d and 'operation' in d:
-                for op1 in d['op1']:
-                    for op2 in d['op2']:
-                        p = SimpleMathProblem(op1, d['operation'], op2,
-                                        properties=prop)
+            if "op1" in d and "op2" in d and "operation" in d:
+                for op1 in d["op1"]:
+                    for op2 in d["op2"]:
+                        p = SimpleMathProblem(op1, d["operation"], op2, properties=prop)
                         self.append(p)
 
     def import_data_frame(self, df: pd.DataFrame):
         for _, row in df.iterrows():
-            self.append(SimpleMathProblem(operand1=row['op1'],
-                     operation=row['operation'],
-                     operand2=row['op2'],
-                     result=row['result']))
+            self.append(
+                SimpleMathProblem(
+                    operand1=row["op1"],
+                    operation=row["operation"],
+                    operand2=row["op2"],
+                    result=row["result"],
+                )
+            )
 
-    def rand_selection(self,
-                       n_correct: int,
-                       n_smaller: int,
-                       n_larger: int,
-                       dev_corr: List[int | float] | int | float = 1,
-                       dev_mean_operand: Optional[float] = None,
-                       min_result: Optional[int | float] = None,
-                       max_result: Optional[int | float] = None,
-                       max_iterations: int = 10000
-                       ) -> MathProblemList:
+    def rand_selection(
+        self,
+        n_correct: int,
+        n_smaller: int,
+        n_larger: int,
+        dev_corr: List[int | float] | int | float = 1,
+        dev_mean_operand: Optional[float] = None,
+        min_result: Optional[int | float] = None,
+        max_result: Optional[int | float] = None,
+        max_iterations: int = 10000,
+    ) -> MathProblemList:
         """select problems with correct and incorrect results and with a maximum
         deviation of mean operands between correct and incorrect problems
 
@@ -323,7 +342,7 @@ class MathProblemList(object):
             if x <= 0:
                 raise RuntimeError("dev_corr has to be large 0")
         # enlarge list
-        while len(dcorr) < n_smaller or len(dcorr)<n_larger:
+        while len(dcorr) < n_smaller or len(dcorr) < n_larger:
             dcorr = np.append(dcorr, dcorr)
 
         # copy all problem, set as correct and create df
@@ -331,9 +350,9 @@ class MathProblemList(object):
         pl.set_results(dev_corr=0)
         df = pl.data_frame()
         if max_result is not None:
-            df = df[df['result'] <= max_result]
+            df = df[df["result"] <= max_result]
         if min_result is not None:
-            df = df[df['result'] >= min_result]
+            df = df[df["result"] >= min_result]
 
         n = 0
         while True:
@@ -342,31 +361,35 @@ class MathProblemList(object):
             n = n + 1
             # smaller
             df_smaller = df.sample(n=n_smaller, replace=False)
-            df_smaller['result'] = df_smaller['result'] - dcorr[:n_smaller]
-            if min_result and (df_smaller['result'] < min_result).any():
+            df_smaller["result"] = df_smaller["result"] - dcorr[:n_smaller]
+            if min_result and (df_smaller["result"] < min_result).any():
                 continue
             # larger
             df_larger = df.sample(n=n_larger, replace=False)
-            df_larger['result'] = df_larger['result'] + dcorr[:n_larger]
-            if max_result and (df_larger['result'] > max_result).any():
+            df_larger["result"] = df_larger["result"] + dcorr[:n_larger]
+            if max_result and (df_larger["result"] > max_result).any():
                 continue
             # correct
             df_c = df.sample(n=n_correct, replace=False)
 
             if dev_mean_operand is not None:
                 # calc means
-                m_op = df_c['op1'].mean()
-                m_op_s = df_smaller['op1'].mean()
-                m_op_l = df_larger['op1'].mean()
-                if (abs(m_op - m_op_s) > dev_mean_operand or
-                        abs(m_op - m_op_l) > dev_mean_operand):
+                m_op = df_c["op1"].mean()
+                m_op_s = df_smaller["op1"].mean()
+                m_op_l = df_larger["op1"].mean()
+                if (
+                    abs(m_op - m_op_s) > dev_mean_operand
+                    or abs(m_op - m_op_l) > dev_mean_operand
+                ):
                     continue
 
-                m_op = df_c['op2'].mean()
-                m_op_s = df_smaller['op2'].mean()
-                m_op_l = df_larger['op2'].mean()
-                if (abs(m_op - m_op_s) > dev_mean_operand or
-                        abs(m_op - m_op_l) > dev_mean_operand):
+                m_op = df_c["op2"].mean()
+                m_op_s = df_smaller["op2"].mean()
+                m_op_l = df_larger["op2"].mean()
+                if (
+                    abs(m_op - m_op_s) > dev_mean_operand
+                    or abs(m_op - m_op_l) > dev_mean_operand
+                ):
                     continue
 
             break

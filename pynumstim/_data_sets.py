@@ -2,13 +2,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from ._mplist import MathProblemList
-from ._problem import SimpleMathProblem, TProperties
 from ._number import Num
+from ._problem import SimpleMathProblem, TProperties
+
 FLD = "datasets"
 
 
 class Datasets:
-
     @staticmethod
     def read_dataset(flname: Union[Path, str]) -> MathProblemList:
         rtn = MathProblemList()
@@ -25,17 +25,18 @@ class Datasets:
         return cls.read_dataset("Lindemann_Tira_10.toml")
 
     @staticmethod
-    def problem_space(operation: str,
-                      operand1: List[int],
-                      operand2: List[int],
-                      incorrect_deviations: Optional[List[int]] = None,
-                      decade_results=True,
-                      tie_problem=True,
-                      negative_results=True,
-                      carry_problems=True,
-                      properties: Optional[TProperties] = None) -> MathProblemList:
-        """creates a MathProblemList comprising the defined problem space
-        """
+    def problem_space(
+        operation: str,
+        operand1: List[int],
+        operand2: List[int],
+        incorrect_deviations: Optional[List[int]] = None,
+        decade_results=True,
+        tie_problem=True,
+        negative_results=True,
+        carry_problems=True,
+        properties: Optional[TProperties] = None,
+    ) -> MathProblemList:
+        """creates a MathProblemList comprising the defined problem space"""
         if incorrect_deviations is None:
             inc_dev = set()
         else:
@@ -50,7 +51,9 @@ class Datasets:
                         p = SimpleMathProblem(op1, operation, op2)
                         correct = p.calc()
                         result = correct + dev
-                        if not decade_results and (result % 10 == 0 or correct % 10 == 0):
+                        if not decade_results and (
+                            result % 10 == 0 or correct % 10 == 0
+                        ):
                             continue
                         if not negative_results and (result < 0 or correct < 0):
                             continue
