@@ -12,12 +12,12 @@ import pandas as pd
 import toml
 
 from ._number import Num, TNum
-from ._problem import SimpleMathProblem, TProperties
+from ._problem import SimpleArithmetic, TProperties
 
 
-class MathProblemList(object):
+class SimpleArithmeticList(object):
     def __init__(self):
-        self._list: List[SimpleMathProblem] = []
+        self._list: List[SimpleArithmetic] = []
         self.number_types: Set[type] = set()  # involved number types
 
     def __str__(self):
@@ -27,23 +27,23 @@ class MathProblemList(object):
         return rtn
 
     @property
-    def list(self) -> List[SimpleMathProblem]:
+    def list(self) -> List[SimpleArithmetic]:
         return self._list
 
     @list.setter
-    def list(self, val: List[SimpleMathProblem]):
+    def list(self, val: List[SimpleArithmetic]):
         self._list = val
         self.number_types: Set[type] = set()
         for x in self._list:
             self.number_types = self.number_types | x.number_types()
 
     def append(
-        self, problem: SimpleMathProblem | MathProblemList | List[SimpleMathProblem]
+        self, problem: SimpleArithmetic | SimpleArithmeticList | List[SimpleArithmetic]
     ):
-        if isinstance(problem, SimpleMathProblem):
+        if isinstance(problem, SimpleArithmetic):
             self._list.append(problem)
             self.number_types = self.number_types | problem.number_types()
-        elif isinstance(problem, MathProblemList):
+        elif isinstance(problem, SimpleArithmeticList):
             self.append(problem.list)
         elif isinstance(problem, List):
             for x in problem:
@@ -51,7 +51,7 @@ class MathProblemList(object):
 
     def get_random(
         self, n: int = 1, dev_corr: Optional[int | float] = None
-    ) -> MathProblemList:
+    ) -> SimpleArithmeticList:
         """Get x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
@@ -59,7 +59,7 @@ class MathProblemList(object):
         """
         lst = deepcopy(self._list)
         shuffle(lst)
-        rtn = MathProblemList()
+        rtn = SimpleArithmeticList()
         rtn.list = lst[0:n]
         if dev_corr is not None:
             rtn.set_results(dev_corr=dev_corr)
@@ -67,14 +67,14 @@ class MathProblemList(object):
 
     def pop_random(
         self, n: int = 1, dev_corr: Optional[int | float] = None
-    ) -> MathProblemList:
+    ) -> SimpleArithmeticList:
         """Pop x random problems
 
         Optionally set results via `dev_cor`, which defined the deviation from
         correct (see `set_results`)
         """
 
-        rtn = MathProblemList()
+        rtn = SimpleArithmeticList()
         for _ in range(n):
             index = randint(0, len(self._list) - 1)
             p = self._list.pop(index)
@@ -110,7 +110,7 @@ class MathProblemList(object):
         decade_solution: Optional[bool] = None,
         problem_size: Optional[float] = None,
         properties: Optional[TProperties] = None,
-    ) -> MathProblemList:
+    ) -> SimpleArithmeticList:
         lst = self.list
         if first_operand is not None:
             lst = [x for x in lst if x.operand1 == first_operand]
@@ -149,7 +149,7 @@ class MathProblemList(object):
         if properties is not None:
             lst = [x for x in lst if x.has_properites(properties)]
 
-        rtn = MathProblemList()
+        rtn = SimpleArithmeticList()
         rtn.list = lst
         return rtn
 
@@ -246,7 +246,7 @@ class MathProblemList(object):
                 x = re.match(r"^\s*\*+\s+", l)
                 if isinstance(x, re.Match):
                     problem_str = l[x.span()[1] :].strip()
-                    p = SimpleMathProblem.parse(problem_str)
+                    p = SimpleArithmetic.parse(problem_str)
                     if curr_cat is not None:
                         p.update_properties({"category": curr_cat})
                     self.append(p)
@@ -289,21 +289,21 @@ class MathProblemList(object):
             if "problems" in d:
                 for x in d["problems"]:
                     if isinstance(x, list):
-                        p = SimpleMathProblem(x[0], x[1], x[2])
+                        p = SimpleArithmetic(x[0], x[1], x[2])
                     else:
-                        p = SimpleMathProblem.parse(x)
+                        p = SimpleArithmetic.parse(x)
                     p.update_properties(prop)
                     self.append(p)
             if "op1" in d and "op2" in d and "operation" in d:
                 for op1 in d["op1"]:
                     for op2 in d["op2"]:
-                        p = SimpleMathProblem(op1, d["operation"], op2, properties=prop)
+                        p = SimpleArithmetic(op1, d["operation"], op2, properties=prop)
                         self.append(p)
 
     def import_data_frame(self, df: pd.DataFrame):
         for _, row in df.iterrows():
             self.append(
-                SimpleMathProblem(
+                SimpleArithmetic(
                     operand1=row["op1"],
                     operation=row["operation"],
                     operand2=row["op2"],
@@ -321,7 +321,7 @@ class MathProblemList(object):
         min_result: Optional[int | float] = None,
         max_result: Optional[int | float] = None,
         max_iterations: int = 10000,
-    ) -> MathProblemList:
+    ) -> SimpleArithmeticList:
         """select problems with correct and incorrect results and with a maximum
         deviation of mean operands between correct and incorrect problems
 
@@ -398,7 +398,7 @@ class MathProblemList(object):
 
             break
 
-        rtn = MathProblemList()
+        rtn = SimpleArithmeticList()
         rtn.import_data_frame(df_c)
         rtn.import_data_frame(df_smaller)
         rtn.import_data_frame(df_larger)

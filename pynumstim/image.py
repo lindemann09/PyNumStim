@@ -4,12 +4,12 @@ from typing import Optional, Union
 
 from sympy import preview
 
-from ._mplist import MathProblemList
-from ._problem import LATEX_SYMBOL_NAMES, SimpleMathProblem
+from ._mplist import SimpleArithmeticList
+from ._problem import LATEX_SYMBOL_NAMES, SimpleArithmetic
 
 
 def create_images(
-    source: Union[str, SimpleMathProblem, MathProblemList],
+    source: Union[str, SimpleArithmetic, SimpleArithmeticList],
     path: Optional[Union[Path, str]] = None,
     segmented=False,
     resolution: int = 400,
@@ -17,14 +17,14 @@ def create_images(
     bg: str = "Transparent",
 ):
     if path is None:
-        if isinstance(source, SimpleMathProblem):
+        if isinstance(source, SimpleArithmetic):
             path = source.label() + ".png"  # use label
         else:
             raise ValueError(
                 f"Path is required, if you create images from {type(source)}"
             )
 
-    if isinstance(source, SimpleMathProblem):
+    if isinstance(source, SimpleArithmetic):
         return _from_problem(
             source,
             folder=path,
@@ -33,7 +33,7 @@ def create_images(
             fg=fg,
             bg=bg,
         )
-    elif isinstance(source, MathProblemList):
+    elif isinstance(source, SimpleArithmeticList):
         return _from_problem_list(
             source,
             folder=path,
@@ -64,7 +64,7 @@ def _from_tex(
 
 
 def _from_problem(
-    problem: SimpleMathProblem,
+    problem: SimpleArithmetic,
     folder: Union[Path, str],
     segmented: bool = False,
     resolution: int = 400,
@@ -102,7 +102,7 @@ def _from_problem(
 
 
 def _from_problem_list(
-    problems: MathProblemList,
+    problems: SimpleArithmeticList,
     folder: Union[Path, str],
     segmented=False,
     resolution: int = 400,

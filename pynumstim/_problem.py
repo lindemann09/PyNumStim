@@ -25,7 +25,7 @@ class MathProblem(metaclass=ABCMeta):
     pass
 
 
-class SimpleMathProblem(MathProblem):
+class SimpleArithmetic(MathProblem):
     LABEL_MULTI = "t"  # multiplication, times
     LABEL_DIVIDE = "d"  # divide
     OPERATIONS = ["+", "-", "*", "/", LABEL_MULTI, LABEL_DIVIDE]
@@ -45,11 +45,11 @@ class SimpleMathProblem(MathProblem):
         self.operand1 = Num(operand1)
         self.operand2 = Num(operand2)
 
-        if operation not in SimpleMathProblem.OPERATIONS:
+        if operation not in SimpleArithmetic.OPERATIONS:
             raise ValueError(f"Unknown operation: '{operation}'")
-        if operation == SimpleMathProblem.LABEL_MULTI:
+        if operation == SimpleArithmetic.LABEL_MULTI:
             self.operation = "*"
-        elif operation == SimpleMathProblem.LABEL_DIVIDE:
+        elif operation == SimpleArithmetic.LABEL_DIVIDE:
             self.operation = "/"
         else:
             self.operation = operation
@@ -68,7 +68,7 @@ class SimpleMathProblem(MathProblem):
         else:
             return rtn
 
-    def operation_label(self):
+    def operation_label(self) -> str:
         if self.operation == "*":
             return self.LABEL_MULTI
         elif self.operation == "/":
@@ -239,7 +239,7 @@ class SimpleMathProblem(MathProblem):
         return (_size(self.operand1) + _size(self.operand2)) / 2.0
 
     @staticmethod
-    def parse(txt: str, properties: Optional[TProperties] = None) -> SimpleMathProblem:
+    def parse(txt: str, properties: Optional[TProperties] = None) -> SimpleArithmetic:
         """fractions have to presented like in labels: frac5_6
         can also convert labels to problems
         """
@@ -251,7 +251,7 @@ class SimpleMathProblem(MathProblem):
                 result = Num(x[1])
 
             op1, op2, operation = (None, None, None)
-            for op in SimpleMathProblem.OPERATIONS:
+            for op in SimpleArithmetic.OPERATIONS:
                 try:
                     op1, op2 = _split_after_digit(x[0], op)
                     operation = op
@@ -260,7 +260,7 @@ class SimpleMathProblem(MathProblem):
                     pass
 
             if None not in (op1, op2, operation):
-                return SimpleMathProblem(op1, operation, op2, result, properties)  # type: ignore
+                return SimpleArithmetic(op1, operation, op2, result, properties)  # type: ignore
 
         raise ValueError(f"Can't convert '{txt}' to MathProblem.")
 
