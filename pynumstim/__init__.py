@@ -7,7 +7,8 @@ __author__ = "Oliver Lindemann"
 __version__ = "0.3.1"
 
 from ._data_sets import Datasets
+from ._math_problem import LaTex, MathProblem
 from ._mplist import SimpleArithmeticList
 from ._number import Num, TNum, TPyNum
-from ._problem import MathProblem, SimpleArithmetic
+from ._simple import SimpleArithmetic
 from ._two_step_problem import TwoStepArithmetic

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Union
 
 from ._mplist import SimpleArithmeticList
 from ._number import Num
-from ._problem import SimpleArithmetic, TProperties
+from ._simple import SimpleArithmetic, TProperties
 from ._two_step_problem import TwoStepArithmetic
 
 FLD = "datasets"

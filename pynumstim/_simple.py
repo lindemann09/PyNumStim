@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import re
-from abc import ABCMeta
 from copy import copy
 from fractions import Fraction
-from hashlib import md5
 from typing import Any, Dict, Optional, Set
 
+from ._math_problem import MathProblem
 from ._number import Num, TNum, TPyNum
 
 LATEX_TIMES = "\\times"  # "\\cdot"
@@ -19,10 +18,6 @@ LATEX_SYMBOL_NAMES = {
 }
 
 TProperties = Dict[str, Any]
-
-
-class MathProblem(metaclass=ABCMeta):
-    pass
 
 
 class SimpleArithmetic(MathProblem):
@@ -154,7 +149,7 @@ class SimpleArithmetic(MathProblem):
         else:
             return float(self.result) - self.calc()
 
-    def tex(self) -> str:
+    def tex(self, brackets: bool = False) -> str:
         o1 = self.operand1.tex()
         o2 = self.operand2.tex()
         if self.operation == "*":
@@ -162,6 +157,8 @@ class SimpleArithmetic(MathProblem):
         else:
             operation = self.operation
         rtn = f"{o1} {operation} {o2}"
+        if brackets:
+            rtn = f"({rtn})"
         if self.result is not None:
             rtn += f" = {self.result.tex()}"
         return rtn
@@ -185,10 +182,6 @@ class SimpleArithmetic(MathProblem):
         if self.result is not None:
             rtn += f" = {self.result.label()}"
         return rtn
-
-    def hash(self) -> str:
-        md5_object = md5(self.label().encode())
-        return md5_object.hexdigest()
 
     def is_correct(self):
         if self.result is None:

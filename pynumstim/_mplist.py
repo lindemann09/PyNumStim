@@ -12,7 +12,7 @@ import pandas as pd
 import toml
 
 from ._number import Num, TNum
-from ._problem import SimpleArithmetic, TProperties
+from ._simple import SimpleArithmetic, TProperties
 
 
 class SimpleArithmeticList(object):

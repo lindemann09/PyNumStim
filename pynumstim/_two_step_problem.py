@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from hashlib import md5
 from typing import Optional
 
+from ._math_problem import MathProblem
 from ._number import Num, TNum, TPyNum
-from ._problem import MathProblem, SimpleArithmetic, TProperties
+from ._simple import SimpleArithmetic, TProperties
 
 
 class TwoStepArithmetic(MathProblem):
@@ -94,7 +94,3 @@ class TwoStepArithmetic(MathProblem):
         if self.result is not None:
             rtn += f" = {self.result.label()}"
         return rtn
-
-    def hash(self) -> str:
-        md5_object = md5(self.label().encode())
-        return md5_object.hexdigest()
