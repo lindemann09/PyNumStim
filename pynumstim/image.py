@@ -6,10 +6,11 @@ from sympy import preview
 
 from ._mplist import SimpleArithmeticList
 from ._problem import LATEX_SYMBOL_NAMES, SimpleArithmetic
+from ._two_step_problem import TwoStepArithmetic
 
 
-def create_images(
-    source: Union[str, SimpleArithmetic, SimpleArithmeticList],
+def tex_to_image(
+    source: Union[str, SimpleArithmetic, TwoStepArithmetic],
     path: Optional[Union[Path, str]] = None,
     segmented=False,
     resolution: int = 400,
@@ -24,17 +25,8 @@ def create_images(
                 f"Path is required, if you create images from {type(source)}"
             )
 
-    if isinstance(source, SimpleArithmetic):
+    if isinstance(source, (TwoStepArithmetic, SimpleArithmetic)):
         return _from_problem(
-            source,
-            folder=path,
-            segmented=segmented,
-            resolution=resolution,
-            fg=fg,
-            bg=bg,
-        )
-    elif isinstance(source, SimpleArithmeticList):
-        return _from_problem_list(
             source,
             folder=path,
             segmented=segmented,
@@ -46,62 +38,7 @@ def create_images(
         return _from_tex(source, filename=path, resolution=resolution, fg=fg, bg=bg)
 
 
-def _from_tex(
-    tex_str: str,
-    filename: Union[Path, str],
-    resolution: int = 400,
-    fg: str = "White",
-    bg: str = "Transparent",
-):
-    """latex to PNG"""
-    return preview(
-        tex_str,
-        dvioptions=["-D", str(resolution), "-fg", fg, "-bg", bg],
-        viewer="file",
-        filename=filename,
-        euler=False,
-    )
-
-
-def _from_problem(
-    problem: SimpleArithmetic,
-    folder: Union[Path, str],
-    segmented: bool = False,
-    resolution: int = 400,
-    fg: str = "White",
-    bg: str = "Transparent",
-) -> str:
-    """returns the filename, if not segmented"""
-
-    os.makedirs(folder, exist_ok=True)
-    flname = os.path.join(folder, "p" + f"{problem.label()}.png")
-    if not segmented:
-        _from_tex(
-            f"$${problem.tex()}$$", filename=flname, resolution=resolution, fg=fg, bg=bg
-        )
-    else:
-        # segmented
-        os.makedirs(folder, exist_ok=True)
-        _create_latex_symbols(folder, resolution=resolution, fg=fg, bg=bg)
-        stim = set()
-        stim.add((problem.operand1.tex(), problem.operand1.label()))
-        stim.add((problem.operand2.tex(), problem.operand2.label()))
-        if problem.result is not None:
-            stim.add((problem.result.tex(), problem.result.label()))
-        for tex, label in stim:
-            print("png: " + label)
-            _from_tex(
-                f"$${tex}$$",
-                filename=os.path.join(folder, "n" + f"{label}.png"),
-                resolution=resolution,
-                fg=fg,
-                bg=bg,
-            )
-
-    return flname
-
-
-def _from_problem_list(
+def problem_list_to_image(
     problems: SimpleArithmeticList,
     folder: Union[Path, str],
     segmented=False,
@@ -145,6 +82,61 @@ def _from_problem_list(
                 fg=fg,
                 bg=bg,
             )
+
+
+def _from_tex(
+    tex_str: str,
+    filename: Union[Path, str],
+    resolution: int = 400,
+    fg: str = "White",
+    bg: str = "Transparent",
+):
+    """latex to PNG"""
+    return preview(
+        tex_str,
+        dvioptions=["-D", str(resolution), "-fg", fg, "-bg", bg],
+        viewer="file",
+        filename=filename,
+        euler=False,
+    )
+
+
+def _from_problem(
+    problem: SimpleArithmetic | TwoStepArithmetic,
+    folder: Union[Path, str],
+    segmented: bool = False,
+    resolution: int = 400,
+    fg: str = "White",
+    bg: str = "Transparent",
+) -> str:
+    """returns the filename, if not segmented"""
+
+    os.makedirs(folder, exist_ok=True)
+    flname = os.path.join(folder, "p" + f"{problem.label()}.png")
+    if not segmented:
+        _from_tex(
+            f"$${problem.tex()}$$", filename=flname, resolution=resolution, fg=fg, bg=bg
+        )
+    else:
+        # segmented
+        os.makedirs(folder, exist_ok=True)
+        _create_latex_symbols(folder, resolution=resolution, fg=fg, bg=bg)
+        stim = set()
+        stim.add((problem.operand1.tex(), problem.operand1.label()))
+        stim.add((problem.operand2.tex(), problem.operand2.label()))
+        if problem.result is not None:
+            stim.add((problem.result.tex(), problem.result.label()))
+        for tex, label in stim:
+            print("png: " + label)
+            _from_tex(
+                f"$${tex}$$",
+                filename=os.path.join(folder, "n" + f"{label}.png"),
+                resolution=resolution,
+                fg=fg,
+                bg=bg,
+            )
+
+    return flname
 
 
 def _create_latex_symbols(
