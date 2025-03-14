@@ -120,15 +120,13 @@ def _from_problem(
     os.makedirs(folder, exist_ok=True)
     if isinstance(problem, LaTex):
         flname = problem.label()
+        tex_code = problem.tex()
     else:
         flname = f"p{problem.label()}"
+        tex_code = f"$${problem.tex()}$$"
     flname = os.path.join(folder, f"{flname}.png")
 
     if not segmented:
-        if isinstance(problem, LaTex):
-            tex_code = problem.tex()
-        else:
-            tex_code = f"$${problem.tex()}$$"
         _from_tex(tex_code, filename=flname, resolution=resolution, fg=fg, bg=bg)
     else:
         # segmented
