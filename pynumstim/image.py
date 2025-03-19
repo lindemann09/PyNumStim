@@ -6,10 +6,11 @@ from sympy import preview
 
 from ._mplist import SimpleArithmeticList
 from ._problem import LATEX_SYMBOL_NAMES, SimpleArithmetic
+from ._two_step_problem import TwoStepArithmetic
 
 
 def create_images(
-    source: Union[str, SimpleArithmetic, SimpleArithmeticList],
+    source: Union[str, SimpleArithmetic, TwoStepArithmetic, SimpleArithmeticList],
     path: Optional[Union[Path, str]] = None,
     segmented=False,
     resolution: int = 400,
@@ -24,7 +25,7 @@ def create_images(
                 f"Path is required, if you create images from {type(source)}"
             )
 
-    if isinstance(source, SimpleArithmetic):
+    if isinstance(source, (TwoStepArithmetic, SimpleArithmetic)):
         return _from_problem(
             source,
             folder=path,
@@ -64,7 +65,7 @@ def _from_tex(
 
 
 def _from_problem(
-    problem: SimpleArithmetic,
+    problem: SimpleArithmetic | TwoStepArithmetic,
     folder: Union[Path, str],
     segmented: bool = False,
     resolution: int = 400,
