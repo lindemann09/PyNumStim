@@ -4,7 +4,7 @@ import pandas as _pd
 
 
 def write_trial_list(
-    math_problem_data_frame: _pd.DataFrame,
+    df: _pd.DataFrame,
     filename: str,
     procedure: str,
     weight: int = 1,
@@ -17,7 +17,7 @@ def write_trial_list(
     which causes problems in e-prime
     """
 
-    df = math_problem_data_frame.round(rounding_digits)
+    df = df.round(rounding_digits)
     df.insert(0, "Weight", weight)
     df.insert(1, "Nested", nested)
     df.insert(2, "Procedure", procedure)
