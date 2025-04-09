@@ -78,6 +78,3 @@ def all_problems() -> Dict[str, List[TwoStepArithmetic]]:
         "too_small_result": too_small_result,
         "too_large_result": too_large_result,
     }
-
-
-print(len(all_problems()["correct"]))

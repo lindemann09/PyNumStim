@@ -115,6 +115,10 @@ def problem_list_to_images(
         for x in problem_list:
             print("png: ", x.label())
             if x.label() not in done:
+                if isinstance(background_image, Image.Image):
+                    bkg = background_image.copy()
+                else:
+                    bkg = None
                 _from_problem(
                     x,
                     folder=folder,
@@ -122,7 +126,7 @@ def problem_list_to_images(
                     resolution=resolution,
                     fg=fg,
                     bg=bg,
-                    background_image=background_image,
+                    background_image=bkg,
                 )
                 done.add(x.label())
     else:
