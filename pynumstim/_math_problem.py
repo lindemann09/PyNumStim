@@ -16,7 +16,7 @@ class MathProblem(metaclass=ABCMeta):
         return md5_object.hexdigest()
 
 
-class LaTex(MathProblem):
+class LaTexProblem(MathProblem):
     def __init__(self, tex_code: str, label: str) -> None:
         self.code = tex_code
         self._label = label
