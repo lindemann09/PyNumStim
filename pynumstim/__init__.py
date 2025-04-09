@@ -4,7 +4,7 @@ creating math problem stimuli with latex formulas and dvipng
 """
 
 __author__ = "Oliver Lindemann"
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 from ._data_sets import Datasets
 from ._math_problem import LaTex, MathProblem

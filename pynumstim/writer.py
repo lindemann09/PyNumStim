@@ -1,7 +1,9 @@
+import io
 import os
 from pathlib import Path
 from typing import List, Optional, Union
 
+from PIL import Image
 from sympy import preview
 
 from ._math_problem import LaTex, MathProblem
@@ -17,7 +19,8 @@ def tex_to_image(
     resolution: int = 400,
     fg: str = "White",
     bg: str = "Transparent",
-):
+    background_image: Optional[Image.Image] = None
+) -> str:
     if path is None:
         if isinstance(source, MathProblem):
             path = source.label() + ".png"  # use label
@@ -27,17 +30,24 @@ def tex_to_image(
             )
 
     if isinstance(source, MathProblem):
-        return _from_problem(
-            source,
+        _from_problem(source,
             folder=path,
             segmented=segmented,
             resolution=resolution,
             fg=fg,
             bg=bg,
-        )
+            background_image=background_image)
     elif isinstance(source, str):
-        return _from_tex(source, filename=path, resolution=resolution, fg=fg, bg=bg)
+        if isinstance(background_image, Image.Image):
+            im = _from_tex_image(source, resolution=resolution, fg=fg, bg=bg)
+            canvas_size = background_image.size
+            position = ((canvas_size[0] - im.size[0]) // 2, (canvas_size[1] - im.size[1]) // 2)
+            background_image.paste(im, position, im)
+            background_image.save(path)
+        else:
+            _from_tex(source, filename=path, resolution=resolution, fg=fg, bg=bg)
 
+    return str(path)
 
 def problem_list_to_images(
     problems: SimpleArithmeticList | List[TwoStepArithmetic] | List[SimpleArithmetic],
@@ -46,6 +56,7 @@ def problem_list_to_images(
     resolution: int = 400,
     fg: str = "White",
     bg: str = "Transparent",
+    background_image: Optional[Image.Image] = None
 ):
     """segmented: single files for each number and operation"""
     # make pictures
@@ -60,16 +71,17 @@ def problem_list_to_images(
         for x in problem_list:
             print("png: ", x.label())
             if x.label() not in done:
-                _from_problem(
-                    x,
+                _from_problem(x,
                     folder=folder,
                     segmented=False,
                     resolution=resolution,
-                    fg=fg,
-                    bg=bg,
+                    fg=fg, bg=bg,
+                    background_image=background_image
                 )
                 done.add(x.label())
     else:
+        if background_image is not None:
+            raise ValueError("background images only possible for not segmented problems")
         _create_opertion_symbols(folder=folder, resolution=resolution, fg=fg, bg=bg)
         # problem_stimuli
         stim = set()
@@ -95,8 +107,8 @@ def _from_tex(
     filename: Union[Path, str],
     resolution: int = 400,
     fg: str = "White",
-    bg: str = "Transparent",
-):
+    bg: str = "Transparent"
+) -> None :
     """latex to PNG"""
     return preview(
         tex_str,
@@ -106,6 +118,23 @@ def _from_tex(
         euler=False,
     )
 
+def _from_tex_image(
+    tex_str: str,
+    resolution: int = 400,
+    fg: str = "White",
+    bg: str = "Transparent"
+) -> Image.Image:
+    """latex to Image.Image"""
+    buf = io.BytesIO()
+    preview(
+        tex_str,
+        dvioptions=["-D", str(resolution), "-fg", fg, "-bg", bg],
+        viewer="BytesIO",
+        outputbuffer=buf,
+        euler=False,
+    )
+    buf.seek(0)
+    return Image.open(buf).convert("RGBA")
 
 def _from_problem(
     problem: MathProblem,
@@ -114,8 +143,12 @@ def _from_problem(
     resolution: int = 400,
     fg: str = "White",
     bg: str = "Transparent",
-) -> str:
+    background_image: Optional[Image.Image] = None
+) -> str | None:
     """returns the filename, if not segmented"""
+
+    if background_image is not None and segmented:
+        raise ValueError("background images only possible for not segmented problems")
 
     os.makedirs(folder, exist_ok=True)
     if isinstance(problem, LaTex):
@@ -127,7 +160,15 @@ def _from_problem(
     flname = os.path.join(folder, f"{flname}.png")
 
     if not segmented:
-        _from_tex(tex_code, filename=flname, resolution=resolution, fg=fg, bg=bg)
+        if background_image is None:
+            _from_tex(tex_code, filename=flname, resolution=resolution, fg=fg, bg=bg)
+        else:
+            im = _from_tex_image(tex_code, resolution=resolution, fg=fg, bg=bg)
+            canvas_size = background_image.size
+            position = ((canvas_size[0] - im.size[0]) // 2, (canvas_size[1] - im.size[1]) // 2)
+            background_image.paste(im, position, im)
+            background_image.save(flname)
+        return flname
     else:
         # segmented
         if not isinstance(problem, SimpleArithmetic):
@@ -152,8 +193,7 @@ def _from_problem(
                 fg=fg,
                 bg=bg,
             )
-
-    return flname
+        return
 
 
 def _create_opertion_symbols(
