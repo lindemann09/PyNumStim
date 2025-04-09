@@ -144,8 +144,8 @@ def _from_problem(
     fg: str = "White",
     bg: str = "Transparent",
     background_image: Optional[Image.Image] = None
-) -> str | None:
-    """returns the filename, if not segmented"""
+) -> str:
+    """returns the filename"""
 
     if background_image is not None and segmented:
         raise ValueError("background images only possible for not segmented problems")
@@ -168,7 +168,6 @@ def _from_problem(
             position = ((canvas_size[0] - im.size[0]) // 2, (canvas_size[1] - im.size[1]) // 2)
             background_image.paste(im, position, im)
             background_image.save(flname)
-        return flname
     else:
         # segmented
         if not isinstance(problem, SimpleArithmetic):
@@ -193,7 +192,7 @@ def _from_problem(
                 fg=fg,
                 bg=bg,
             )
-        return
+    return flname
 
 
 def _create_opertion_symbols(
